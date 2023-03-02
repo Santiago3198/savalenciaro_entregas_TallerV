@@ -50,3 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+#Archivos STM32
+Debug/
+.metadata/
+.directory
+Release/
