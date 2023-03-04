@@ -26,7 +26,7 @@
 #define AHB2_BASE_ADDR		0x50000000U
 
 #define USB_OTG_FS_BASE_ADDR		(AHB2_BASE_ADDR + 0x0000U)
-//CONTINUAR AQUÍ
+//Continuacion de esta monda 
 
 #define ENABLE		1
 #define DISABLE		0
