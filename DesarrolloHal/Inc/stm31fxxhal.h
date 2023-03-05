@@ -49,7 +49,7 @@
 #define I2C_READ		1
 
 typedef struct
-{
+{	
 	volatile uint32_t CR;
 	volatile uint32_t PLLCFGR;
 	volatile uint32_t CFGR;
@@ -87,5 +87,95 @@ typedef struct
 	volatile uint32_t reserved14;
 	volatile uint32_t DCKCFGR;
 } RCC RedDef t;        //¿Por que no cambia de color a azul?.
-//Continuar aqui!!!
+
+#define RCC		((RCC_RegDef_t *) RCC_BASE_ADDR)
+
+#define RCC_AHB1ENR_GPIOA_EN		0
+#define RCC_AHB1ENR_GPIOB_EN		1
+#define RCC_AHB1ENR_GPIOC_EN		2
+#define RCC_AHB1ENR_GPIOD_EN		3
+#define RCC_AHB1ENR_GPIOE_EN		4
+#define RCC_AHB1ENR_GPIOH_EN		7
+#define RCC_AHB1ENR_CRCEN			12
+#define RCC_AHB1ENR_DMA1_EN			21
+#define RCC_AHB1ENR_DMA2_EN			22
+
+typedef struct
+{
+	volatile uint32_t MODER;
+	volatile uint32_t OTYPER;
+	volatile uint32_t OSPEEDR;
+	volatile uint32_t PUPDR;
+	volatile uint32_t IDR;
+	volatile uint32_t ODR;
+	volatile uint32_t BSRR;
+	volatile uint32_t LCKR;
+	volatile uint32_t AFRL;
+	volatile uint32_t AFRH;
+	
+} GPIOx_RegDef_t;
+
+#define GPIOA		((GPIOx_RegDef_t *) GIPOA_BASE_ADDR)
+#define GPIOB		((GPIOx_RegDef_t *) GIPOB_BASE_ADDR)
+#define GPIOC		((GPIOx_RegDef_t *) GIPOC_BASE_ADDR)
+#define GPIOD		((GPIOx_RegDef_t *) GIPOD_BASE_ADDR)
+#define GPIOE		((GPIOx_RegDef_t *) GIPOE_BASE_ADDR)
+#define GPIOH		((GPIOx_RegDef_t *) GIPOH_BASE_ADDR)
+
+#define GPIO_MODE_IN		0
+#define GPIO_MODE_OUT		1
+#define GPIO_MODE_ALTFN		2
+#define GPIO_MODE_ANALOG	3
+
+#define GPIO_OTYPE_PUSHPULL		0
+#define GPIO_OTYPE_OPENDRAIN	1
+
+#define GPIO_OSPEEDR_LOW		0
+#define GPIO_OSPEEDR_MEDIUM		1
+#define GPIO_OSPEEDR_FAST		2
+#define GPIO_OSPEEDR_HIGH		3
+
+#define GPIO_PUPDR_NOTHING		0
+#define GPIO_PUPDR_PULLUP		1
+#define GPIO_PUPDR_PULLDOWN		2
+#define GPIO_PUPDR_RESERVED		3
+
+#define PIN_0		0
+#define PIN_1		1
+#define PIN_2		2
+#define PIN_3		3
+#define PIN_4		4
+#define PIN_5		5
+#define PIN_6		6
+#define PIN_7		7
+#define PIN_8		8
+#define PIN_9		9
+#define PIN_10		10
+#define PIN_11		11
+#define PIN_12		12
+#define PIN_13		13
+#define PIN_14		14
+#define PIN_15		15
+
+#define AF0		0b0000
+#define AF1		0b0001
+#define AF2		0b0010
+#define AF3		0b0011
+#define AF4		0b0100
+#define AF5		0b0101
+#define AF6		0b0110
+#define AF7		0b0111
+#define AF8		0b1000
+#define AF9		0b1001
+#define AF10	0b1010
+#define AF11	0b1011
+#define AF12	0b1100
+#define AF13	0b1101
+#define AF14	0b1110
+#define AF15	0b1111
+
+
 #endif /* STM31FXXHAL_H_ */
+
+//Finalizacion de la transcripcion.
+//Verificar errores
