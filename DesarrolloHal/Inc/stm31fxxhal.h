@@ -176,6 +176,3 @@ typedef struct
 
 
 #endif /* STM31FXXHAL_H_ */
-
-//Finalizacion de la transcripcion.
-//Verificar errores
