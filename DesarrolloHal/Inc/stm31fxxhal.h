@@ -86,7 +86,7 @@ typedef struct
 	volatile uint32_t PLLI2SCFGR;
 	volatile uint32_t reserved14;
 	volatile uint32_t DCKCFGR;
-} RCC_RedDef_t;        //¿Por que no cambia de color a azul?.
+} RCC_RedDef_t;
 
 #define RCC		((RCC_RegDef_t *) RCC_BASE_ADDR)
 
