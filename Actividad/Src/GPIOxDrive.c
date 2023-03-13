@@ -1,4 +1,4 @@
-#include "GPIOxDrive.h"
+#include "GPIOxDriver.h"
 
 void GPIO_Config (GPIO_Handler_t *pGPIOHandler){
 
@@ -7,20 +7,20 @@ void GPIO_Config (GPIO_Handler_t *pGPIOHandler){
 
 	if (pGPIOHandler->pGPIOx == GPIOA){
 
-		RCC.AHB1ENR |=(SET <<  RCC_AHB1ENR_GPIOA_EN);   //cambiar el punto por una flecha, no olvidar.
+		RCC->AHB1ENR |=(SET <<  RCC_AHB1ENR_GPIOA_EN);
 	}
 
 	else if (pGPIOHandler->pGPIOx == GPIOB){
 
-		RCC.AHB1ENR |= (SET << RCC_AHB1ENR_GPIOB_EN);     //cambiar el punto por la flecha
+		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOB_EN);
 	}
 	else if (pGPIOHandler->pGPIOx == GPIOC){
 
-		RCC.AHB1ENR |= (SET << RCC_AHB1ENR_GPIOC_EN);
+		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOC_EN);
 	}
 	else if (pGPIOHandler->pGPIOx == GPIOD){
 
-		RCC.AHB1ENR |= (SET << RCC_AHB1ENR_GPIOD_EN);
+		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOD_EN);
 	}
 	else if (pGPIOHandler->pGPIOx == GPIOE){
 
@@ -80,7 +80,7 @@ void GPIO_WritePin (GPIO_Handler_t *pPinHandler, uint8_t newState){
 uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler){
 	uint32_t pinValue = 0;
 
-	pinValuer = (pPinHandler->pGPIOx->IDR ññ pPinHandler.GPIO_PinConfig.GPIO_PinNumber);  //Cambiar ññ por flechas hace la izquierda
+	pinValuer = (pPinHandler->pGPIOx->IDR << pPinHandler->GPIO_PinConfig.GPIO_PinNumber);
 
 	return pinValue;
 
