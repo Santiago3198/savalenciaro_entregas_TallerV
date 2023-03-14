@@ -5,8 +5,8 @@
  *      Author: if420_01
  */
 
-#ifndef STM31FXXHAL_H_
-#define STM31FXXHAL_H_
+#ifndef STM32FXXHAL_H_
+#define STM32FXXHAL_H_
 
 #include <stdint.h>
 #include <stddef.h>
@@ -175,4 +175,4 @@ typedef struct
 #define AF15	0b1111
 
 
-#endif /* STM31FXXHAL_H_ */
+#endif /* STM32FXXHAL_H_ */
