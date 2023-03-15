@@ -115,12 +115,12 @@ typedef struct
 	
 } GPIOx_RegDef_t;
 
-#define GPIOA		((GPIOx_RegDef_t *) GIPOA_BASE_ADDR)
-#define GPIOB		((GPIOx_RegDef_t *) GIPOB_BASE_ADDR)
-#define GPIOC		((GPIOx_RegDef_t *) GIPOC_BASE_ADDR)
-#define GPIOD		((GPIOx_RegDef_t *) GIPOD_BASE_ADDR)
-#define GPIOE		((GPIOx_RegDef_t *) GIPOE_BASE_ADDR)
-#define GPIOH		((GPIOx_RegDef_t *) GIPOH_BASE_ADDR)
+#define GPIOA		((GPIOx_RegDef_t *) GPIOA_BASE_ADDR)
+#define GPIOB		((GPIOx_RegDef_t *) GPIOB_BASE_ADDR)
+#define GPIOC		((GPIOx_RegDef_t *) GPIOC_BASE_ADDR)
+#define GPIOD		((GPIOx_RegDef_t *) GPIOD_BASE_ADDR)
+#define GPIOE		((GPIOx_RegDef_t *) GPIOE_BASE_ADDR)
+#define GPIOH		((GPIOx_RegDef_t *) GPIOH_BASE_ADDR)
 
 #define GPIO_MODE_IN		0
 #define GPIO_MODE_OUT		1

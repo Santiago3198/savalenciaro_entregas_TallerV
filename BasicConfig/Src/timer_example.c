@@ -12,12 +12,13 @@
 
 GPIO_Handler_t handlerOnBoardLed = {};
 
-int main (void) {
+int main (void)
+{
 	/* Establecer las configuraciones del PIN_A5 como salida */
 	handlerOnBoardLed.pGPIOx = GPIOA;
 	handlerOnBoardLed.GPIO_PinConfig.GPIO_PinNumber	= PIN_5;
 	handlerOnBoardLed.GPIO_PinConfig.GPIO_PinMode	= GPIO_MODE_OUT;
-	handlerOnBoardLed.GPIO_PinConfig.GPIO_PinSpeed	= GPIO_OSPEED_FAST;
+	handlerOnBoardLed.GPIO_PinConfig.GPIO_PinSpeed	= GPIO_OSPEEDR_FAST;
 	handlerOnBoardLed.GPIO_PinConfig.GPIO_PinOPType	= GPIO_OTYPE_PUSHPULL;
 
 	GPIO_Config(&handlerOnBoardLed);
