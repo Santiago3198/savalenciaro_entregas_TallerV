@@ -7,7 +7,10 @@
 
 #ifndef GPIOXDRIVER_H_
 #define GPIOXDRIVER_H_
-#include "stm32fxxhal.h"
+
+#include <stdint.h>
+#include "stm32f4xx.h"
+
 
 typedef struct
 {
@@ -22,7 +25,7 @@ typedef struct
 
 typedef struct
 {
-	GPIOx_RegDef_t		*pGPIOx;
+	GPIO_TypeDef_t		*pGPIOx;
 	GPIO_PinConfig_t	GPIO_PinConfig;
 
 }GPIO_Handler_t;
