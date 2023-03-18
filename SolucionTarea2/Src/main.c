@@ -17,13 +17,27 @@
  */
 
 #include <stdint.h>
+// Incluir los .h
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
+// Definir los pines como GPIOx_Handlers
 int main(void)
 {
     /* Loop forever */
-	for(;;);
+	//Asignarles los valores de configuracion a los pines de la tarea 
+	while (1)
+	{	
+		
+		//Prender led toggle
+		for (int i = 0; i<16000; i++){
+			NOP();
+			NOP();
+			NOP();
+		}
+		//Apagar Led toggle
+	}
+	return 0;
 }
