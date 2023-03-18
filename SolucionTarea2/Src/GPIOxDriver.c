@@ -87,6 +87,15 @@ uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler){
 
 }
 
+//Segundo punto Tarea 2.
+
+void GPIOxTooglePin (GPIO_Handler_t *pGPIOHandler){
+	uint32_t pinValue = 0;
+	pinValue = GPIO_ReadPin(pGPIOHandler
+	
+	
+}
+
 /* Primer punto.
 	a. La variable pinValue está retornando el valor que hay en el registro IDR y le está realizando un Shift Register hacia la izquierda una cantidad de 
 	   posiciones igual a GPIO_PinNumber del GPIO_PinConfig. 
