@@ -31,6 +31,10 @@ void GPIO_Config (GPIO_Handler_t *pGPIOHandler);
 void GPIO_WritePin(GPIO_Handler_t *pPinHandler, uint8_t newState);
 uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler);
 
+//Segundo punto Tarea 2. 
+
+void GPIOxTooglePin (GPIO_Handler_t *pGPIOHandler);
+
 
 
 #endif /* GPIOXDRIVER_H_ */
