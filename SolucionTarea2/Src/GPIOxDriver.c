@@ -92,3 +92,4 @@ uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler){
 	   posiciones igual a GPIO_PinNumber del GPIO_PinConfig. 
 	b. La solución debería consistir en que la variable pinValue tome el valor que corresponde a lo que hay en el registro IDR del pin que se quiera leer, es decir,
 	   pinValue es igual a 0 si el pin que se está usando está apagado e igual a 1 si el pin está encendido. 
+/*
