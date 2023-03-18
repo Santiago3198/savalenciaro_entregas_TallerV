@@ -80,8 +80,15 @@ void GPIO_WritePin (GPIO_Handler_t *pPinHandler, uint8_t newState){
 uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler){
 	uint32_t pinValue = 0;
 
-	pinValue = (pPinHandler->pGPIOx->IDR << pPinHandler->GPIO_PinConfig.GPIO_PinNumber);
+	// pinValue = (pPinHandler->pGPIOx->IDR << pPinHandler->GPIO_PinConfig.GPIO_PinNumber);		Línea a Corregir
+	pinValue = (pPinHandler->pGPIOx->IDR >> pPinHandler->GPIO_PinConfig.GPIO_PinNumber) & SET;	//Línea Corregida
 
 	return pinValue;
 
 }
+
+/* Primer punto.
+	a. La variable pinValue está retornando el valor que hay en el registro IDR y le está realizando un Shift Register hacia la izquierda una cantidad de 
+	   posiciones igual a GPIO_PinNumber del GPIO_PinConfig. 
+	b. La solución debería consistir en que la variable pinValue tome el valor que corresponde a lo que hay en el registro IDR del pin que se quiera leer, es decir,
+	   pinValue es igual a 0 si el pin que se está usando está apagado e igual a 1 si el pin está encendido. 
