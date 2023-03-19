@@ -17,7 +17,7 @@
  */
 
 #include <stdint.h>
-#include "stm31fxxhal.h"
+#include <stm32fxxhal.h>
 int main(void)
 {
 	//Configuracion inicial del MCU

@@ -5,8 +5,8 @@
  *      Author: if420_01
  */
 
-#ifndef STM31FXXHAL_H_
-#define STM31FXXHAL_H_
+#ifndef STM32FXXHAL_H_
+#define STM32FXXHAL_H_
 
 #include <stdint.h>
 #include <stddef.h>
@@ -86,7 +86,7 @@ typedef struct
 	volatile uint32_t PLLI2SCFGR;
 	volatile uint32_t reserved14;
 	volatile uint32_t DCKCFGR;
-} RCC_RedDef_t;
+} RCC_RegDef_t;
 
 #define RCC		((RCC_RegDef_t *) RCC_BASE_ADDR)
 
@@ -115,12 +115,12 @@ typedef struct
 	
 } GPIOx_RegDef_t;
 
-#define GPIOA		((GPIOx_RegDef_t *) GIPOA_BASE_ADDR)
-#define GPIOB		((GPIOx_RegDef_t *) GIPOB_BASE_ADDR)
-#define GPIOC		((GPIOx_RegDef_t *) GIPOC_BASE_ADDR)
-#define GPIOD		((GPIOx_RegDef_t *) GIPOD_BASE_ADDR)
-#define GPIOE		((GPIOx_RegDef_t *) GIPOE_BASE_ADDR)
-#define GPIOH		((GPIOx_RegDef_t *) GIPOH_BASE_ADDR)
+#define GPIOA		((GPIOx_RegDef_t *) GPIOA_BASE_ADDR)
+#define GPIOB		((GPIOx_RegDef_t *) GPIOB_BASE_ADDR)
+#define GPIOC		((GPIOx_RegDef_t *) GPIOC_BASE_ADDR)
+#define GPIOD		((GPIOx_RegDef_t *) GPIOD_BASE_ADDR)
+#define GPIOE		((GPIOx_RegDef_t *) GPIOE_BASE_ADDR)
+#define GPIOH		((GPIOx_RegDef_t *) GPIOH_BASE_ADDR)
 
 #define GPIO_MODE_IN		0
 #define GPIO_MODE_OUT		1
@@ -175,4 +175,4 @@ typedef struct
 #define AF15	0b1111
 
 
-#endif /* STM31FXXHAL_H_ */
+#endif /* STM32FXXHAL_H_ */

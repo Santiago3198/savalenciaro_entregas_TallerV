@@ -24,22 +24,22 @@ void GPIO_Config (GPIO_Handler_t *pGPIOHandler){
 	}
 	else if (pGPIOHandler->pGPIOx == GPIOE){
 
-		RCC.AHB1ENR |= (SET << RCC_AHB1ENR_GPIOE_EN);
+		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOE_EN);
 	}
 	else if (pGPIOHandler->pGPIOx ==GPIOH){
 
-		RCC.AHB1ENR |= (SET << RCC_AHB1ENR_GPIOH_EN);
+		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOH_EN);
 	}
 
 	auxConfig = (pGPIOHandler->GPIO_PinConfig.GPIO_PinMode << 2 * pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber);
 
-	pGPIOHandler->pGPIOx->MODER &=ÑÑ(0b11 << 2 * pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber); //Cambiar las ÑÑ por una virgulilla
+	pGPIOHandler->pGPIOx->MODER &= ~(0b11 << 2 * pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber);
 
-	pGPIOHandler->pGPIOx->MODER |= auxconfig;
+	pGPIOHandler->pGPIOx->MODER |= auxConfig;
 
 	auxConfig = (pGPIOHandler->GPIO_PinConfig.GPIO_PinOPType << pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber);
 
-	pGPIOHandler->pGPIOx->OTYPER &= ÑÑ(SET << pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber);  //Cambiar las ÑÑ por virgulilla
+	pGPIOHandler->pGPIOx->OTYPER &= ~(SET << pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber);
 
 	pGPIOHandler->pGPIOx->OTYPER |= auxConfig;
 
@@ -49,7 +49,7 @@ void GPIO_Config (GPIO_Handler_t *pGPIOHandler){
 
 			auxPosition = 4 * pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber;
 
-			pGPIOHandler->pGPIOx->AFRL &= ÑÑ(0b1111 << auxPosition);  //Cambiar las ÑÑ por vigulilla
+			pGPIOHandler->pGPIOx->AFRL &= ~(0b1111 << auxPosition);
 
 			pGPIOHandler->pGPIOx->AFRL |= (pGPIOHandler->GPIO_PinConfig.GPIO_PinAltFunMode << auxPosition);
 		}
@@ -57,7 +57,7 @@ void GPIO_Config (GPIO_Handler_t *pGPIOHandler){
 
 			auxPosition = 4 * (pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber -8);
 
-			pGPIOHandler->pGPIOx->AFRH &= ÑÑ(0b1111 << auxPosition);
+			pGPIOHandler->pGPIOx->AFRH &= ~(0b1111 << auxPosition);
 
 			pGPIOHandler->pGPIOx->AFRH |= (pGPIOHandler->GPIO_PinConfig.GPIO_PinAltFunMode << auxPosition);
 
@@ -80,7 +80,7 @@ void GPIO_WritePin (GPIO_Handler_t *pPinHandler, uint8_t newState){
 uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler){
 	uint32_t pinValue = 0;
 
-	pinValuer = (pPinHandler->pGPIOx->IDR << pPinHandler->GPIO_PinConfig.GPIO_PinNumber);
+	pinValue = (pPinHandler->pGPIOx->IDR << pPinHandler->GPIO_PinConfig.GPIO_PinNumber);
 
 	return pinValue;
 
