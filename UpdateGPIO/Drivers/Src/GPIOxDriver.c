@@ -7,28 +7,28 @@ void GPIO_Config (GPIO_Handler_t *pGPIOHandler){
 
 	if (pGPIOHandler->pGPIOx == GPIOA){
 
-		RCC->AHB1ENR |=(SET <<  RCC_AHB1ENR_GPIOA_EN);
+		RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOAEN);
 	}
 
 	else if (pGPIOHandler->pGPIOx == GPIOB){
 
-		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOB_EN);
+		RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOBEN);
 	}
 	else if (pGPIOHandler->pGPIOx == GPIOC){
 
-		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOC_EN);
+		RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOCEN);
 	}
 	else if (pGPIOHandler->pGPIOx == GPIOD){
 
-		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOD_EN);
+		RCC->AHB1ENR |= (RCC_AHB1ENR_GPIODEN);
 	}
 	else if (pGPIOHandler->pGPIOx == GPIOE){
 
-		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOE_EN);
+		RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOEEN);
 	}
 	else if (pGPIOHandler->pGPIOx ==GPIOH){
 
-		RCC->AHB1ENR |= (SET << RCC_AHB1ENR_GPIOH_EN);
+		RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOHEN);
 	}
 
 	auxConfig = (pGPIOHandler->GPIO_PinConfig.GPIO_PinMode << 2 * pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber);
@@ -49,17 +49,17 @@ void GPIO_Config (GPIO_Handler_t *pGPIOHandler){
 
 			auxPosition = 4 * pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber;
 
-			pGPIOHandler->pGPIOx->AFRL &= ~(0b1111 << auxPosition);
+			pGPIOHandler->pGPIOx->AFR[0] &= ~(0b1111 << auxPosition);
 
-			pGPIOHandler->pGPIOx->AFRL |= (pGPIOHandler->GPIO_PinConfig.GPIO_PinAltFunMode << auxPosition);
+			pGPIOHandler->pGPIOx->AFR[0] |= (pGPIOHandler->GPIO_PinConfig.GPIO_PinAltFunMode << auxPosition);
 		}
 		else{
 
 			auxPosition = 4 * (pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber -8);
 
-			pGPIOHandler->pGPIOx->AFRH &= ~(0b1111 << auxPosition);
+			pGPIOHandler->pGPIOx->AFR[1] &= ~(0b1111 << auxPosition);
 
-			pGPIOHandler->pGPIOx->AFRH |= (pGPIOHandler->GPIO_PinConfig.GPIO_PinAltFunMode << auxPosition);
+			pGPIOHandler->pGPIOx->AFR[1] |= (pGPIOHandler->GPIO_PinConfig.GPIO_PinAltFunMode << auxPosition);
 
 		}
 	}
