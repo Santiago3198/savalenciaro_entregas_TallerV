@@ -5,6 +5,10 @@
  *      Author: if420_01
  */
 
+
+/*Definiciones relacionadas con el debido manejo y control del periferico GPIOx (Funciones del controlador)*/
+
+
 #ifndef GPIOXDRIVER_H_
 #define GPIOXDRIVER_H_
 #include "stm32fxxhal.h"
@@ -20,12 +24,19 @@ typedef struct
 
 }GPIO_PinConfig_t;
 
+/*La siguiente estructura contiene dos elementos:
+ * 1.Direccion del puerto que se esta utilizando
+ * 2.Configuracion especifica del pin que se esta utilizando
+ */
+
 typedef struct
 {
-	GPIOx_RegDef_t		*pGPIOx;
-	GPIO_PinConfig_t	GPIO_PinConfig;
+	GPIOx_RegDef_t		*pGPIOx;				//Direccion del puerto al que el pin corresponde
+	GPIO_PinConfig_t	GPIO_PinConfig;			//Configuracion del pin
 
 }GPIO_Handler_t;
+
+/*Definiciones de las cabeceras de las funciones del GPIOxDriver*/
 
 void GPIO_Config (GPIO_Handler_t *pGPIOHandler);
 void GPIO_WritePin(GPIO_Handler_t *pPinHandler, uint8_t newState);
