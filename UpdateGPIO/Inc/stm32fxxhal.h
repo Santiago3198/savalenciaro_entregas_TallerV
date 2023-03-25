@@ -86,9 +86,9 @@ typedef struct
 	volatile uint32_t PLLI2SCFGR;
 	volatile uint32_t reserved14;
 	volatile uint32_t DCKCFGR;
-} GPIO_TypeDef;
+} RCC_RegDef_t;
 
-#define RCC		((GPIO_TypeDef *) RCC_BASE_ADDR)
+#define RCC		((RCC_RegDef_t *) RCC_BASE_ADDR)
 
 #define RCC_AHB1ENR_GPIOA_EN		0
 #define RCC_AHB1ENR_GPIOB_EN		1
@@ -113,14 +113,14 @@ typedef struct
 	volatile uint32_t AFRL;
 	volatile uint32_t AFRH;
 	
-} GPIO_TypeDef;
+} GPIOx_RegDef_t;
 
-#define GPIOA		((GPIO_TypeDef *) GPIOA_BASE_ADDR)
-#define GPIOB		((GPIO_TypeDef *) GPIOB_BASE_ADDR)
-#define GPIOC		((GPIO_TypeDef *) GPIOC_BASE_ADDR)
-#define GPIOD		((GPIO_TypeDef *) GPIOD_BASE_ADDR)
-#define GPIOE		((GPIO_TypeDef *) GPIOE_BASE_ADDR)
-#define GPIOH		((GPIO_TypeDef *) GPIOH_BASE_ADDR)
+#define GPIOA		((GPIOx_RegDef_t *) GPIOA_BASE_ADDR)
+#define GPIOB		((GPIOx_RegDef_t *) GPIOB_BASE_ADDR)
+#define GPIOC		((GPIOx_RegDef_t *) GPIOC_BASE_ADDR)
+#define GPIOD		((GPIOx_RegDef_t *) GPIOD_BASE_ADDR)
+#define GPIOE		((GPIOx_RegDef_t *) GPIOE_BASE_ADDR)
+#define GPIOH		((GPIOx_RegDef_t *) GPIOH_BASE_ADDR)
 
 #define GPIO_MODE_IN		0
 #define GPIO_MODE_OUT		1
