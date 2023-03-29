@@ -21,10 +21,10 @@
 
 typedef struct
 {
-	uint8_t TIMx_mode;				//Up or Down
-	uint32_t TIMx_speed;			//A qué velocidad se incrementa el timer
-	uint32_t TIMx_period;			//Valor en ms del periodo del timer
-	uint8_t	TIMx_interruptEnable;	//Activa o desactiva el modo interrupcion del timer
+	uint8_t 	TIMx_mode;				//Up or Down
+	uint32_t 	TIMx_speed;				//A qué velocidad se incrementa el timer
+	uint32_t 	TIMx_period;			//Valor en ms del periodo del timer
+	uint8_t		TIMx_interruptEnable;	//Activa o desactiva el modo interrupcion del timer
 
 }BasicTimer_Config_t;
 
@@ -32,12 +32,12 @@ typedef struct
 
 typedef struct
 {
-	TIM_Typedef		*ptrTIMx;
-	BasicTimer_Config_t	TIMx_Config;
+	TIM_TypeDef				*ptrTIMx;
+	BasicTimer_Config_t		TIMx_Config;
 
 }BasicTimer_Handler_t;
 
-void BasicTmer_Config(BasicTimer_Handler_t *ptrBTimerHandler);
+void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler);
 void BasicTimerX_Callback(void); 		//Esta funcion debe ser sobreescrita en el main para que el sistema funcione
 
 

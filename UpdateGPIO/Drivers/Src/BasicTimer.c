@@ -14,7 +14,7 @@ TIM_TypeDef		*ptrTimerUsed;
 /*Funcion en la que cargamos la configuracion del Timer
  * Recordar que siempre se debe comenzar con activar la señal de reloj del periferico
  * que se está utilizando.
- * en este caso debemos ser cuidadosos al momento de utilizar la s interrupciones.
+ * en este caso debemos ser cuidadosos al momento de utilizar las interrupciones.
  * Los Timers están conectados directamente al elemento NVIC del cortex _ Mx
  * Debemos configurar y/o utilizar:
  * 		-TIMx_CR1 (control register 1)
@@ -59,11 +59,11 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 	/*2.Configuramos el pre-escaler
 	 * Recordar que el pre-escaler nos indica la velocidad a la que se incrementa el counter,
-	 * de forma que periodo_incremento * veces_incremento_counter = preiodo_update
+	 * de forma que periodo_incremento * veces_incremento_counter = periodo_update
 	 * Modificar el valor del registro PSC en el TIM utilizado
 	 */
 
-	/*ESCRIBIR EL CODIGO*/
+	ptrBTimerHandler->ptrTIMx->PSC = (ptrBTimerHandler->ptrTIMx->CNT / ptrBTimerHandler->ptrTIMx->PSC) - 1;  //Preguntar para corregir
 
 	/*3.Configuramos la direccion del counter (up/down)*/
 
@@ -73,6 +73,8 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		//Configurar el registro que nos controla el modo up or down
 
 		/*ESCRIBIR CODIGO*/
+
+
 
 		/*3b. Configuramos el Autoreload. Este es el "limite" hasta donde el CNT va a contar */
 
@@ -153,7 +155,7 @@ void TIM2_IRQHandler(void){
 
 	/*Limpiamos la bandera que indica que la interrupcion se ha generado */
 
-	ptrTimerUsed->SR &= ÑÑTIM_SR_UIF;
+	ptrTimerUsed->SR &= ~TIM_SR_UIF;
 
 	/*Lamamos a la funcion que se debe encargar de hacer algo con esta interrupcion */
 
