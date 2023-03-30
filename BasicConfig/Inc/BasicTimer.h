@@ -32,7 +32,7 @@ typedef struct
 
 typedef struct
 {
-	TIM_Typedef		*ptrTIMx;
+	TIM_TypeDef		*ptrTIMx;
 	BasicTimer_Config_t	TIMx_Config;
 
 }BasicTimer_Handler_t;

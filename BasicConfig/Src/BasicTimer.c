@@ -14,7 +14,7 @@ TIM_TypeDef		*ptrTimerUsed;
 /*Funcion en la que cargamos la configuracion del Timer
  * Recordar que siempre se debe comenzar con activar la señal de reloj del periferico
  * que se está utilizando.
- * en este caso debemos ser cuidadosos al momento de utilizar la s interrupciones.
+ * en este caso debemos ser cuidadosos al momento de utilizar las interrupciones.
  * Los Timers están conectados directamente al elemento NVIC del cortex _ Mx
  * Debemos configurar y/o utilizar:
  * 		-TIMx_CR1 (control register 1)
@@ -34,7 +34,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 	//Guardamos una referencia al periferico que estamos utilizando
 
-	ptrTimerUsed = ptrBTimerHandler->ptrTIMx;
+	ptrTimerUsed = ptrBTimerHandler->ptrTIMx;					//¿Cómo que una referencia?
 
 	/*0. Desactivamos las interrupciones globales mientras configuramos el sistema.*/
 
@@ -42,15 +42,27 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 	/*1.Activar la señal de reloj del periferico requerido*/
 
-	if(ptrBTimerHandler->ptrTIMx == TIM2){
+	if (ptrBTimerHandler->ptrTIMx == TIM2){
 
 		//Registro del RCC que nos activa la señal de reloj para el TIM2
+		RCC->AHB1ENR |= RCC_APB1ENR_TIM2EN;
 
 	}
-	else if(ptrBTimerHandler->ptrTIMx == TIM3){
+	else if (ptrBTimerHandler->ptrTIMx == TIM3){
 
 		//Registro del RCC que nos activa la señal de reloj para el TIM3
+		RCC->AHB1ENR |= RCC_APB1ENR_TIM3EN;
 
+	}
+	else if (ptrBTimerHandler->ptrTIMx == TIM4){
+
+		//Registro del RCC que nos activa la señal de reloj para el TIM4
+		RCC->AHB1ENR |= RCC_APB1ENR_TIM4EN;
+	}
+	else if (ptrBTimerHandler->ptrTIMx == TIM5){
+
+		//Registro del RCC que nos activa la señal de reloj para el TIM5
+		RCC->AHB1ENR |= RCC_APB1ENR_TIM5EN;
 	}
 	else{
 		__NOP();
@@ -62,8 +74,8 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	 * de forma que periodo_incremento * veces_incremento_counter = preiodo_update
 	 * Modificar el valor del registro PSC en el TIM utilizado
 	 */
-
 	/*ESCRIBIR EL CODIGO*/
+	ptrTimerUsed->PSC = ptrBTimerHandler->TIMx_Config.TIMx_speed;
 
 	/*3.Configuramos la direccion del counter (up/down)*/
 
@@ -72,7 +84,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		/*3a. Estamos en UP_Mode, el limite se carga en ARR y se comienza en 0 */
 		//Configurar el registro que nos controla el modo up or down
 
-		/*ESCRIBIR CODIGO*/
+		ptrTimerUsed->CR1 &= ~TIM_CR1_DIR;
 
 		/*3b. Configuramos el Autoreload. Este es el "limite" hasta donde el CNT va a contar */
 
@@ -80,18 +92,19 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 		/*3c. Reiniciamos el registro counter*/
 
-		/*ESCRIBIR CODIGO*/
+		ptrBTimerHandler->ptrTIMx->CNT = RESET;
 
 	}else{
+
 		/*3a. Estamos en DOWN_Mode, el limite se carga en ARR (0) y se comienza con un valor alto
-		 * Trabaja contando en direccion descendente
-		 */
-		/*ESCRIBIR CODIGO*/
+		 * Trabaja contando en direccion descendente*/
+
+		ptrTimerUsed->CR1 |= TIM_CR1_DIR;
 
 		/*3b. Configuramos el autoreload. Este es el limite hasta donde el CNT va a contar
 		 * En modo descendente, con numeros positivos, cual es el minimo valor que el ARR puede tomar*/
 
-		 /*ESCRIBIR CODIGO*/
+		 ptrBTimerHandler->ptrTIMx->ARR = 0;
 
 		/*3c. Reiniciamos el registro counter
 		 * Este es el valor con el que el counter comienza */
@@ -153,7 +166,7 @@ void TIM2_IRQHandler(void){
 
 	/*Limpiamos la bandera que indica que la interrupcion se ha generado */
 
-	ptrTimerUsed->SR &= ÑÑTIM_SR_UIF;
+	ptrTimerUsed->SR &= ~TIM_SR_UIF;
 
 	/*Lamamos a la funcion que se debe encargar de hacer algo con esta interrupcion */
 
