@@ -39,7 +39,8 @@ typedef struct
 
 void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler);
 void BasicTimer2_Callback(void); 		//Esta funcion debe ser sobreescrita en el main para que el sistema funcione
-
-
+void BasicTimer3_Callback(void);
+void BasicTimer4_Callback(void);
+void BasicTimer5_Callback(void);
 
 #endif /* BASICTIMER_H_ */
