@@ -27,14 +27,18 @@ void displayWrite(uint8_t number);
 void switchDigit(void);
 void wormPath(uint8_t number);
 
-GPIO_Handler_t handlerBlinky = {0};		//PIN A6
-BasicTimer_Handler_t handlerTimerBlinky = {0};
-BasicTimer_Handler_t handlerTimerDisplay = {0};
-GPIO_Handler_t handlerEncoder = {0};		//PIN B3
-EXTI_Config_t extiConfigEncoder = {0};
-GPIO_Handler_t handlerUserButton = {0};		//PIN C13
-GPIO_Handler_t handlerAuxButton = {0};		//PIN C4
-EXTI_Config_t extiConfigAuxButton = {0};
+GPIO_Handler_t handlerBlinky 				= {0};		//PIN A6
+GPIO_Handler_t handlerUserButton 			= {0};		//PIN C13
+GPIO_Handler_t handlerAuxButton 			= {0};		//PIN C4
+GPIO_Handler_t handlerEncoder 				= {0};		//PIN B3
+BasicTimer_Handler_t handlerTimerBlinky 	= {0};
+BasicTimer_Handler_t handlerTimerDisplay 	= {0};
+EXTI_Config_t extiConfigEncoder 			= {0};
+EXTI_Config_t extiConfigAuxButton 			= {0};
+
+int8_t contador 	= 0;
+uint8_t modeWorm 	= 0;
+int8_t wormCounter 	= 0;
 
 //Declaracion de los pines del display
 
@@ -48,12 +52,8 @@ GPIO_Handler_t 	ledG 	 		= {0};   		//LED G			PB2
 GPIO_Handler_t 	displayLeft 	= {0};   		//ANODO 1	   	PC1
 GPIO_Handler_t 	displayRight 	= {0};  		//ANODO 2      	PA0
 
-int8_t contador = 0;
-uint8_t modeWorm = 0;
-int8_t wormCounter = 0;
+int main(void){
 
-int main(void)
-{
 	//Configuración inicial del blinky
 	handlerBlinky.pGPIOx = GPIOA;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
@@ -143,7 +143,7 @@ int main(void)
 	ledG.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
 	GPIO_Config(&ledG);
 
-	//Configuración inicial del displayLeft
+	//Configuración inicial del displayRight
 	displayLeft.pGPIOx = GPIOC;
 	displayLeft.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	displayLeft.GPIO_PinConfig.GPIO_PinNumber = PIN_1;
