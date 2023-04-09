@@ -22,17 +22,17 @@
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
 
-GPIO_Handler_t handlerUserLed = {0};
+GPIO_Handler_t handlerBlinky = {0};
 BasicTimer_Handler_t handlerTimer = {0};
 
 int main(void)
 {
-	handlerUserLed.pGPIOx = GPIOA;
-	handlerUserLed.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	handlerUserLed.GPIO_PinConfig.GPIO_PinNumber = PIN_5;
-	handlerUserLed.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
-	handlerUserLed.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
-	handlerUserLed.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerBlinky.pGPIOx = GPIOA;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber = PIN_5;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 
 	handlerTimer.ptrTIMx = TIM2;
 	handlerTimer.TIMx_Config.TIMx_mode = BTIMER_MODE_UP;
@@ -40,8 +40,8 @@ int main(void)
 	handlerTimer.TIMx_Config.TIMx_period = 1000;
 	handlerTimer.TIMx_Config.TIMx_interruptEnable = 1;
 
-	GPIO_Config(&handlerUserLed);
-	GPIO_WritePin(&handlerUserLed, SET);
+	GPIO_Config(&handlerBlinky);
+	GPIO_WritePin(&handlerBlinky, SET);
 	BasicTimer_Config(&handlerTimer);
 
     while (1){
@@ -51,5 +51,5 @@ int main(void)
     }
 
 void BasicTimer2_Callback(void){
-	GPIOxTooglePin(&handlerUserLed);
+	GPIOxTooglePin(&handlerBlinky);
 }
