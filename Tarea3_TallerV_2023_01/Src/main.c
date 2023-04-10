@@ -49,8 +49,8 @@ GPIO_Handler_t 	ledD 			= {0};   		//LED D 		PB1
 GPIO_Handler_t 	ledE 			= {0};   		//LED E			PB15
 GPIO_Handler_t 	ledF 			= {0};   		//LED F			PB0
 GPIO_Handler_t 	ledG 	 		= {0};   		//LED G			PB2
-GPIO_Handler_t 	displayLeft 	= {0};   		//ANODO 1	   	PC1
-GPIO_Handler_t 	displayRight 	= {0};  		//ANODO 2      	PA0
+GPIO_Handler_t 	DispUni 		= {0};   		//ANODO 1	   	PC1
+GPIO_Handler_t 	DispDec 		= {0};  		//ANODO 2      	PA0
 
 int main(void){
 
@@ -63,7 +63,6 @@ int main(void){
 	handlerBlinky.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
 	GPIO_Config(&handlerBlinky);
-	//GPIO_WritePin(&handlerBlinky, SET);
 
 	//Configuracion inicial del TIM2
 	handlerTimerBlinky.ptrTIMx = TIM2;
@@ -143,27 +142,30 @@ int main(void){
 	ledG.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
 	GPIO_Config(&ledG);
 
-	//Configuración inicial del displayRight
-	displayLeft.pGPIOx = GPIOC;
-	displayLeft.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	displayLeft.GPIO_PinConfig.GPIO_PinNumber = PIN_1;
-	displayLeft.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
-	displayLeft.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
-	displayLeft.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	displayLeft.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
-	GPIO_Config(&displayLeft);
+	//Configuración inicial del DispUni
+	DispUni.pGPIOx = GPIOC;
+	DispUni.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	DispUni.GPIO_PinConfig.GPIO_PinNumber = PIN_1;
+	DispUni.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
+	DispUni.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
+	DispUni.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	DispUni.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
+	GPIO_Config(&DispUni);
 
-	//Configuración inicial del displayLeft
-	displayRight.pGPIOx = GPIOA;
-	displayRight.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	displayRight.GPIO_PinConfig.GPIO_PinNumber = PIN_0;
-	displayRight.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
-	displayRight.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
-	displayRight.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	displayRight.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
-	GPIO_Config(&displayRight);
+	//Configuración inicial del DispDec
+	DispDec.pGPIOx = GPIOA;
+	DispDec.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	DispDec.GPIO_PinConfig.GPIO_PinNumber = PIN_0;
+	DispDec.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
+	DispDec.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
+	DispDec.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	DispDec.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
+	GPIO_Config(&DispDec);
 
-	//Configuracion del TIM4 -- Timer encargado de hacer switch entre los transistores conectados a cada digito del 7 segmentos
+	//Configuracion del TIM4
+	/*
+	 * Timer encargado de hacer switch entre los transistores conectados a cada digito del 7 segmentos
+	 */
 	handlerTimerDisplay.ptrTIMx = TIM4;
 	handlerTimerDisplay.TIMx_Config.TIMx_mode = BTIMER_MODE_UP;
 	handlerTimerDisplay.TIMx_Config.TIMx_speed = BTIMER_SPEED_100us;
@@ -171,7 +173,11 @@ int main(void){
 	handlerTimerDisplay.TIMx_Config.TIMx_interruptEnable = 1;
 	BasicTimer_Config(&handlerTimerDisplay);
 
-	//Configuracion Encoder
+	//Configuracion Encoder (en mi caso el equivalente es el botón principal)
+	/*
+	 * Con cada PULL del botón principal el contador aumenta o disminuya según
+	 * sea la configuración del USER_BUTTON que se presenta más adelante.
+	 */
 	handlerEncoder.pGPIOx = GPIOB;
 	handlerEncoder.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
 	handlerEncoder.GPIO_PinConfig.GPIO_PinNumber = PIN_3;
@@ -185,6 +191,13 @@ int main(void){
 	extInt_Config(&extiConfigEncoder);
 
 	//Configuracion User Button
+	/*
+	 * Al mantener presionado el USER_BUTTON, el botón que anteriormente servía para aumentar
+	 * el contador del display se vuelve el botón que hace que el contador disminuya.
+	 * Es decir, cuando USER_BUTTON == 0 el programa muestra nos números de forma ascendente con cada
+	 * PULL del botón y cuando USER_BUTTON == 1 el programa muestra los números de manera descendente
+	 * con cada PULL del botón.
+	 */
 	handlerUserButton.pGPIOx = GPIOC;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber = PIN_13;
@@ -194,7 +207,10 @@ int main(void){
 	handlerUserButton.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
 	GPIO_Config(&handlerUserButton);
 
-	//Configuracion AuxButton -- Boton usado para cambiar al modo gusanito
+	//Configuracion AuxButton
+	/*
+	 * Boton usado para cambiar al modo gusanito
+	*/
 	handlerAuxButton.pGPIOx = GPIOC;
 	handlerAuxButton.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
 	handlerAuxButton.GPIO_PinConfig.GPIO_PinNumber = PIN_4;
@@ -208,11 +224,12 @@ int main(void){
 	extInt_Config(&extiConfigAuxButton);
 
 
-	GPIO_WritePin(&displayLeft, SET);
-	GPIO_WritePin(&displayRight, RESET);
+	GPIO_WritePin(&DispUni, SET);
+	GPIO_WritePin(&DispDec, RESET);
 
-	//Como el 7 segmentos es anodo común, para apagar un pin se debe poner en SET y viceversa
-	//Se apagan todos los pines
+	/* Como el 7 segmentos es anodo común, para apagar un Led se debe poner en SET y viceversa
+	 * Se apagan todos los Leds
+	 */
 	GPIO_WritePin(&ledA, SET);
 	GPIO_WritePin(&ledB, SET);
 	GPIO_WritePin(&ledC, SET);
@@ -224,27 +241,42 @@ int main(void){
 	contador = 0;
 
 	//Ciclo del programa
+
     while (1){
 
     	}
     return 0;
     }
 
+/*
+ *El BasicTimer2_Callback se encanga de que el blinky permanezca encendido mientras el programa
+ *se esté ejecutando
+ */
 void BasicTimer2_Callback(void){
 	GPIOxTooglePin(&handlerBlinky);
 }
 
+/*
+ * EL BasicTimer4_Callback es el que está "pendiente" de que cuando se genere la interrupción
+ * que corresponde al AuxButton
+ */
 void BasicTimer4_Callback(void){
 	if(modeWorm == RESET){
+
 		//Cada vez que interrumpe TIM4 se cambia el estado de los dos pines para hacer el switch
-		GPIOxTooglePin(&displayLeft);
-		GPIOxTooglePin(&displayRight);
+		GPIOxTooglePin(&DispUni);
+		GPIOxTooglePin(&DispDec);
 		switchDigit();
 	}else{
 		wormPath(wormCounter);
 	}
 }
 
+/*
+ * Si el modo gusanito está en RESET entonces el programa ejecuta la parte del
+ * código que corresponda a la función de subir y bajar el contador del 0 al 99
+ * de forma ascendente o descendente
+ */
 void callback_extInt3(void){
 	uint32_t button = GPIO_ReadPin(&handlerUserButton);
 	if (modeWorm == RESET){
@@ -274,24 +306,31 @@ void callback_extInt3(void){
 	}
 }
 
+/*
+ * Interrupción que activa el modo gusanito
+ */
 void callback_extInt4(void){
 	modeWorm = !modeWorm;
 }
 
+/*
+ * Función que indica qué debe mostrar cada uno de los displays de las unidades y las decenas
+ */
 void switchDigit(void){
-	uint32_t left = GPIO_ReadPin(&displayLeft);
+	uint32_t left = GPIO_ReadPin(&DispUni);
 	if(left == SET){
 		displayWrite(contador/10);
-		return;
 	}
-	uint32_t right = GPIO_ReadPin(&displayRight);
+	uint32_t right = GPIO_ReadPin(&DispDec);
 	if(right == SET){
 		displayWrite(contador%10);
 	}
 }
 
-
-
+/*
+ * Función que determina cuales Leds deben estar encendidos dependiendo del número que se
+ * encuentre guardado en ese momento
+ */
 void displayWrite(uint8_t number){
 
 	switch (number){
@@ -416,12 +455,16 @@ void displayWrite(uint8_t number){
 
 }
 
+/*
+ * Función que determina cuales Leds deben estar encendidos dependiendo de la posición
+ * en la que se encuentre el gusanito en este momento.
+ */
 void wormPath(uint8_t number){
 
 	switch (number){
 		case 0:{
-			GPIO_WritePin(&displayRight, SET);
-			GPIO_WritePin(&displayLeft, RESET);
+			GPIO_WritePin(&DispDec, SET);
+			GPIO_WritePin(&DispUni, RESET);
 			GPIO_WritePin(&ledA, RESET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, SET);
@@ -432,8 +475,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 1:{
-			GPIO_WritePin(&displayRight, RESET);
-			GPIO_WritePin(&displayLeft, SET);
+			GPIO_WritePin(&DispDec, RESET);
+			GPIO_WritePin(&DispUni, SET);
 			GPIO_WritePin(&ledA, RESET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, SET);
@@ -444,8 +487,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 2:{
-			GPIO_WritePin(&displayRight, RESET);
-			GPIO_WritePin(&displayLeft, SET);
+			GPIO_WritePin(&DispDec, RESET);
+			GPIO_WritePin(&DispUni, SET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, SET);
@@ -457,8 +500,8 @@ void wormPath(uint8_t number){
 		}
 
 		case 3:{
-			GPIO_WritePin(&displayRight, RESET);
-			GPIO_WritePin(&displayLeft, SET);
+			GPIO_WritePin(&DispDec, RESET);
+			GPIO_WritePin(&DispUni, SET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, SET);
@@ -469,8 +512,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 4:{
-			GPIO_WritePin(&displayRight, RESET);
-			GPIO_WritePin(&displayLeft, SET);
+			GPIO_WritePin(&DispDec, RESET);
+			GPIO_WritePin(&DispUni, SET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, SET);
@@ -482,8 +525,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 5:{
-			GPIO_WritePin(&displayRight, SET);
-			GPIO_WritePin(&displayLeft, RESET);
+			GPIO_WritePin(&DispDec, SET);
+			GPIO_WritePin(&DispUni, RESET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, SET);
@@ -494,8 +537,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 6:{
-			GPIO_WritePin(&displayRight, SET);
-			GPIO_WritePin(&displayLeft, RESET);
+			GPIO_WritePin(&DispDec, SET);
+			GPIO_WritePin(&DispUni, RESET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, SET);
@@ -507,8 +550,8 @@ void wormPath(uint8_t number){
 		}
 
 		case 7:{
-			GPIO_WritePin(&displayRight, RESET);
-			GPIO_WritePin(&displayLeft, SET);
+			GPIO_WritePin(&DispDec, RESET);
+			GPIO_WritePin(&DispUni, SET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, RESET);
@@ -520,8 +563,8 @@ void wormPath(uint8_t number){
 		}
 
 		case 8:{
-			GPIO_WritePin(&displayRight, RESET);
-			GPIO_WritePin(&displayLeft, SET);
+			GPIO_WritePin(&DispDec, RESET);
+			GPIO_WritePin(&DispUni, SET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, RESET);
 			GPIO_WritePin(&ledC, SET);
@@ -532,8 +575,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 9:{
-			GPIO_WritePin(&displayRight, SET);
-			GPIO_WritePin(&displayLeft, RESET);
+			GPIO_WritePin(&DispDec, SET);
+			GPIO_WritePin(&DispUni, RESET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, RESET);
 			GPIO_WritePin(&ledC, SET);
@@ -544,8 +587,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 10:{
-			GPIO_WritePin(&displayRight, SET);
-			GPIO_WritePin(&displayLeft, RESET);
+			GPIO_WritePin(&DispDec, SET);
+			GPIO_WritePin(&DispUni, RESET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, SET);
@@ -556,8 +599,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 11:{
-			GPIO_WritePin(&displayRight, SET);
-			GPIO_WritePin(&displayLeft, RESET);
+			GPIO_WritePin(&DispDec, SET);
+			GPIO_WritePin(&DispUni, RESET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, SET);
 			GPIO_WritePin(&ledC, RESET);
@@ -568,8 +611,8 @@ void wormPath(uint8_t number){
 			break;
 		}
 		case 12:{
-			GPIO_WritePin(&displayRight, SET);
-			GPIO_WritePin(&displayLeft, RESET);
+			GPIO_WritePin(&DispDec, SET);
+			GPIO_WritePin(&DispUni, RESET);
 			GPIO_WritePin(&ledA, SET);
 			GPIO_WritePin(&ledB, RESET);
 			GPIO_WritePin(&ledC, SET);
