@@ -19,11 +19,15 @@
 
 #include <stm32f4xx.h>
 #include <stdint.h>
+#include "GPIOxDriver.h"
+#include "BasicTimer.h"
+#include "ExtiDriver.h"
 
-int main(void)
-{
+int main(void){
+
     while (1){
 
-    }
+    	}
     return 0;
-}
+    }
+
