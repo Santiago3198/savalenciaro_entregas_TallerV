@@ -29,9 +29,6 @@ uint8_t userButton = {0};
 
 int main(void){
 
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
-
 	//Configuración pin LED
 	handlerLED.pGPIOx = GPIOA;
 	handlerLED.GPIO_PinConfig.GPIO_PinNumber = PIN_5;
