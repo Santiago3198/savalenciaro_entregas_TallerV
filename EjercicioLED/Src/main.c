@@ -15,8 +15,6 @@
  *
  ******************************************************************************
  */
-
-
 #include <stm32f4xx.h>
 #include <stdint.h>
 #include "GPIOxDriver.h"
@@ -31,10 +29,13 @@ uint8_t userButton = {0};
 
 int main(void){
 
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+
 	//Configuración pin LED
 	handlerLED.pGPIOx = GPIOA;
-	handlerLED.GPIO_PinConfig.GPIO_PinNumber = PIN_1;
-	handlerLED.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	handlerLED.GPIO_PinConfig.GPIO_PinNumber = PIN_5;
+	handlerLED.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	handlerLED.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
 	handlerLED.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
 	handlerLED.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
@@ -42,9 +43,9 @@ int main(void){
 	GPIO_Config(&handlerLED);
 
 	//Configuracion pun USER_Button
-	handlerButton.pGPIOx = GPIOA;
-	handlerButton.GPIO_PinConfig.GPIO_PinNumber = PIN_2;
-	handlerButton.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	handlerButton.pGPIOx = GPIOC;
+	handlerButton.GPIO_PinConfig.GPIO_PinNumber = PIN_13;
+	handlerButton.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
 	handlerButton.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
 	handlerButton.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
 	handlerButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
@@ -53,14 +54,15 @@ int main(void){
 
     while (1){
 
+        userButton = GPIO_ReadPin(&handlerButton);
+        if(userButton == RESET){
+        	GPIO_WritePin(&handlerLED, RESET);
+        }else{
+        	GPIO_WritePin(&handlerLED, SET);
+        }
+
     	}
     return 0;
 
-    userButton = GPIO_ReadPin(&handlerButton);
-    if(userButton == SET){
-    	GPIO_WritePin(&handlerLED, SET);
-    }else{
-    	GPIO_WritePin(&handlerLED, RESET);
-    }
 }
 
