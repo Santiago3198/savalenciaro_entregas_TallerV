@@ -46,32 +46,30 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
     // Tenga cuidado, el parity hace parte del tamaño de los datos...
 	if(ptrUsartHandler->USART_Config.USART_parity != USART_PARITY_NONE){
 
-		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_PCE;
-		ptrUsartHandler->ptrUSARTx->CR1 |= (0b1 << 10);
+		ptrUsartHandler->ptrUSARTx->CR1 |= (USART_CR1_PCE);
 
 		// Verificamos si se ha seleccionado ODD or EVEN
 		if(ptrUsartHandler->USART_Config.USART_parity == USART_PARITY_EVEN){
 			// Es even, entonces cargamos la configuracion adecuada
-			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_PS;
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~(USART_CR1_PS);
 
 		}else{
 			// Si es "else" significa que la paridad seleccionada es ODD, y cargamos esta configuracion
-			ptrUsartHandler->ptrUSARTx->CR1 &= ~(0b1 << 9);
-			ptrUsartHandler->ptrUSARTx->CR1 |= (0b1 << 9);
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~(USART_CR1_PS);
+			ptrUsartHandler->ptrUSARTx->CR1 |= (USART_CR1_PS);
 
 		}
 	}else{
 		// Si llegamos aca, es porque no deseamos tener el parity-check
-		ptrUsartHandler->ptrUSARTx->CR1 &= ~(0b1 << 10);
+		ptrUsartHandler->ptrUSARTx->CR1 &= ~(USART_CR1_PCE);
 	}
 
 	// 2.3 Configuramos el tamaño del dato
     if(ptrUsartHandler->USART_Config.USART_datasize == USART_DATASIZE_8BIT){
-    	ptrUsartHandler->ptrUSARTx->CR1 &= ~(0b1 << 12);
+    	ptrUsartHandler->ptrUSARTx->CR1 &= ~(USART_CR1_M);
     }
     else{
-    	ptrUsartHandler->ptrUSARTx->CR1 &= ~(0b1 << 12);
-    	ptrUsartHandler->ptrUSARTx->CR1 |= (0b1 << 12);
+    	ptrUsartHandler->ptrUSARTx->CR1 |= (USART_CR1_M);
     }
 
 	// 2.4 Configuramos los stop bits (SFR USART_CR2)
@@ -84,7 +82,6 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	}
 	case USART_STOPBIT_0_5: {
 		// Debemoscargar el valor 0b01 en los dos bits de STOP
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 12);
 		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 13);
 		ptrUsartHandler->ptrUSARTx->CR2 |= (0b1 << 12);
 		break;
@@ -92,14 +89,11 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	case USART_STOPBIT_2: {
 		// Debemoscargar el valor 0b10 en los dos bits de STOP
 		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 12);
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 13);
 		ptrUsartHandler->ptrUSARTx->CR2 |= (0b1 << 13);
 		break;
 	}
 	case USART_STOPBIT_1_5: {
 		// Debemoscargar el valor 0b11 en los dos bits de STOP
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 12);
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 13);
 		ptrUsartHandler->ptrUSARTx->CR2 |= (0b1 << 12);
 		ptrUsartHandler->ptrUSARTx->CR2 |= (0b1 << 13);
 		break;
