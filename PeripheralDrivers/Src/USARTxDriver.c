@@ -76,32 +76,30 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	switch(ptrUsartHandler->USART_Config.USART_stopbits){
 	case USART_STOPBIT_1: {
 		// Debemos cargar el valor 0b00 en los dos bits de STOP
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 12);
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 13);
+		ptrUsartHandler->ptrUSARTx->CR2 &= ~(USART_CR2_STOP);
 		break;
 	}
 	case USART_STOPBIT_0_5: {
 		// Debemo scargar el valor 0b01 en los dos bits de STOP
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 13);
-		ptrUsartHandler->ptrUSARTx->CR2 |= (0b1 << 12);
+		ptrUsartHandler->ptrUSARTx->CR2 &= ~(USART_CR2_STOP);
+		ptrUsartHandler->ptrUSARTx->CR2 |= (USART_CR2_STOP_0);
 		break;
 	}
 	case USART_STOPBIT_2: {
 		// Debemos cargar el valor 0b10 en los dos bits de STOP
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 12);
-		ptrUsartHandler->ptrUSARTx->CR2 |= (0b1 << 13);
+		ptrUsartHandler->ptrUSARTx->CR2 &= ~(USART_CR2_STOP);
+		ptrUsartHandler->ptrUSARTx->CR2 |= (USART_CR2_STOP_1);
 		break;
 	}
 	case USART_STOPBIT_1_5: {
 		// Debemos cargar el valor 0b11 en los dos bits de STOP
-		ptrUsartHandler->ptrUSARTx->CR2 |= (0b1 << 12);
-		ptrUsartHandler->ptrUSARTx->CR2 |= (0b1 << 13);
+		ptrUsartHandler->ptrUSARTx->CR2 &= ~(USART_CR2_STOP);
+		ptrUsartHandler->ptrUSARTx->CR2 |= (USART_CR2_STOP);
 		break;
 	}
 	default: {
 		// En el caso por defecto seleccionamos 1 bit de parada
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 12);
-		ptrUsartHandler->ptrUSARTx->CR2 &= ~(0b1 << 13);
+		ptrUsartHandler->ptrUSARTx->CR2 &= ~(USART_CR2_STOP);
 		break;
 	}
 	}
