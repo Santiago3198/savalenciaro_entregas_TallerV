@@ -20,20 +20,19 @@ GPIO_Handler_t handlerBlinkyPin 			= {0};
 BasicTimer_Handler_t handlerBlinkyTimer 	= {0};
 
 //Elementos para la comunicacion serial
-GPIO_Handler_t handlerPinTX	= {0};
-USART_Handler_t handlerUSART2	= {0};
+GPIO_Handler_t handlerPinTX					= {0};
+USART_Handler_t handlerUsart2				= {0};
 
 void initSystem(void);
 
 int main(void){
 
-	writeChar(&handlerUSART2, 5);
-
 	/*Loop forever*/
 	while(1){
 
+		writeChar(&handlerUsart2, 5);
+
 	}
-	return 0;
 }
 
 void initSystem(void){
@@ -55,20 +54,21 @@ void initSystem(void){
 	handlerBlinkyTimer.TIMx_Config.TIMx_interruptEnable		= 1;
 	BasicTimer_Config(&handlerBlinkyTimer);
 
+	//Configuracion de la comunicacion serial
+
 	handlerPinTX.pGPIOx										= GPIOA;
 	handlerPinTX.GPIO_PinConfig.GPIO_PinNumber				= PIN_2;
 	handlerPinTX.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
 	handlerPinTX.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
 	GPIO_Config(&handlerPinTX);
 
-	handlerUSART2.ptrUSARTx	 								= USART2;
-	handlerUSART2.USART_Config.USART_baudrate					= USART_BAUDRATE_115200;
-	handlerUSART2.USART_Config.USART_datasize					= USART_DATASIZE_8BIT;
-	handlerUSART2.USART_Config.USART_parity					= USART_PARITY_NONE;
-	handlerUSART2.USART_Config.USART_stopbits					= USART_STOPBIT_1;
-	handlerUSART2.USART_Config.USART_mode						= USART_MODE_RXTX;
-	USART_Config(&handlerUSART2);
+	handlerUsart2.ptrUSARTx	 								= USART2;
+	handlerUsart2.USART_Config.USART_baudrate				= USART_BAUDRATE_115200;
+	handlerUsart2.USART_Config.USART_datasize				= USART_DATASIZE_8BIT;
+	handlerUsart2.USART_Config.USART_parity					= USART_PARITY_NONE;
+	handlerUsart2.USART_Config.USART_stopbits				= USART_STOPBIT_1;
+	handlerUsart2.USART_Config.USART_mode					= USART_MODE_TX;
+	USART_Config(&handlerUsart2);
 }
-
 
 
