@@ -43,7 +43,7 @@ int main(void){
 	/*Loop forever*/
 	while(1){
 		if(sendMsg == 4){
-			writeMsg (&usart2Comm, "Malparido protocolo de USART funciona cuando le da la perra gana");
+			writeMsg (&usart2Comm, "Este protocolo funciona cuando le da la gana");
 			sendMsg = 0;
 		}
 	}
