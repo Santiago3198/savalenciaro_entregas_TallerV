@@ -33,6 +33,7 @@ USART_Handler_t usart2Comm		= {0};
 USART_Handler_t usart6Comm		= {0};
 uint8_t sendMsg = 0;
 uint8_t counter = 0;
+uint8_t data	= 0;
 
 //Definir las cabeceras de las funciones del main
 void initSystem(void);
@@ -49,14 +50,15 @@ int main(void){
 
 	/*Loop forever*/
 	while(1){
-		if(sendMsg == 4){
-			writeMsg (&usart2Comm, "Este protocolo funciona cuando le da la gana");
-			sendMsg = 0;
+		writeChar(&usart1Comm, counter);
+		counter++;
 
+			writeChar (&usart2Comm, counter);
+			sendMsg = 0;
 		}
-	}
 	return 0;
-}
+	}
+
 
 /*Funcion encargada de la inicializacion de los elementos del sistema*/
 
