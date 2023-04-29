@@ -52,9 +52,11 @@ int main(void){
 	while(1){
 		writeChar(&usart1Comm, counter);
 		counter++;
-
-			writeChar (&usart2Comm, counter);
-			sendMsg = 0;
+		//Delay
+		readChar(&usart6Comm, data);
+		writeChar (&usart2Comm, data);
+		//Delay
+		sendMsg = 0;
 		}
 	return 0;
 	}
