@@ -37,6 +37,7 @@ uint8_t data	= 0;
 
 //Definir las cabeceras de las funciones del main
 void initSystem(void);
+void delay_ms(uint32_t);
 
 /*
  * Funcion principal del programa
@@ -52,10 +53,10 @@ int main(void){
 	while(1){
 		writeChar(&usart1Comm, counter);
 		counter++;
-		//Delay
+		delay_ms(500);
 		readChar(&usart6Comm, data);
 		writeChar (&usart2Comm, data);
-		//Delay
+		delay_ms(500);
 		sendMsg = 0;
 		}
 	return 0;
