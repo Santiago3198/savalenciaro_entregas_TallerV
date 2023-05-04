@@ -174,18 +174,25 @@ void GPIOxTooglePin(GPIO_Handler_t *ptrPinHandler){
 	GPIO_WritePin (ptrPinHandler, newState);
 }
 
-void delay_ms(uint32_t ms) {
-    SysTick_Config(SystemCoreClock / 1000); // Configurar SysTick a 1ms
-    uint32_t start = SysTick->VAL; // Valor actual del contador
-    uint32_t count = 0; // Cuenta el tiempo de retardo transcurrido
+/*void delay_ms(uint32_t ms)
+{
+    // Obtenemos el tiempo actual del sistema en milisegundos
+    uint32_t tiempo_actual = SysTick->VAL;
 
-    while (count < ms) {
-        uint32_t current = SysTick->VAL;
-        if (current > start) { // El contador se desbordó
-            count += (start + 0xFFFFFFFF - current) / (SystemCoreClock / 1000);
-        } else { // El contador no se desbordó
-            count += (start - current) / (SystemCoreClock / 1000);
-        }
-        start = current; // Actualizar el valor de inicio del contador
+    // Configuramos el SysTick para generar una interrupción cada milisegundo
+    SysTick_Config(SystemCoreClock / 1000);
+
+    // Realizamos el delay hasta que hayan pasado los milisegundos indicados
+    while (ms--)
+    {
+        // Esperamos a que la bandera de interrupción se active
+        while (!(SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk));
+
+        // Reiniciamos la bandera de interrupción
+        SysTick->CTRL &= ~SysTick_CTRL_COUNTFLAG_Msk;
     }
+
+    // Restablecemos el valor del SysTick al tiempo actual
+    SysTick->VAL = tiempo_actual;
 }
+*/

@@ -51,13 +51,14 @@ int main(void){
 
 	/*Loop forever*/
 	while(1){
-		writeChar(&usart1Comm, counter);
-		counter++;
-		delay_ms(500);
-		readChar(&usart6Comm, data);
-		writeChar (&usart2Comm, data);
-		delay_ms(500);
-		sendMsg = 0;
+		if(sendMsg == 4){
+			writeChar(&usart1Comm, counter);
+			counter++;
+			readChar(&usart6Comm, data);
+			writeChar (&usart2Comm, data);
+			sendMsg = 0;
+		}
+
 		}
 	return 0;
 	}
