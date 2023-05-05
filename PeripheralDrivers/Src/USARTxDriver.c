@@ -188,12 +188,13 @@ int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend){
 }
 
 /*Funcion para leer un mensaje*/
-int readChar(USART_Handler_t *ptrUsartHandler, int dataToReceive){
+uint8_t readChar(USART_Handler_t *ptrUsartHandler){
+	uint8_t dataToReceive;
 	while( !(ptrUsartHandler->ptrUSARTx->SR & USART_SR_RXNE)){
 		__NOP();
 	}
 
-	ptrUsartHandler->ptrUSARTx->DR = dataToReceive;
+	dataToReceive = ptrUsartHandler->ptrUSARTx->DR;
 
 	return dataToReceive;
 
@@ -207,3 +208,46 @@ void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend){
 	}
 }
 
+//Lectura del caracter que llega por la interfase serial
+void getRxData(void){
+	return auxRxData;
+}
+
+void USART1_IRQHandler(void){
+	//Evaluamos si la interrupcion que se dio es por RX
+	if(USART1->SR & USART_SR_RXNE){
+		auxRxData = (uint8_t) USART1->DR;
+		usart1Rx_Callback();
+	}
+}
+
+void USART2_IRQHandler(void){
+	//Evaluamos si la interrupcion que se dio es por RX
+	if(USART2->SR & USART_SR_RXNE){
+		auxRxData = (uint8_t) USART2->DR;
+		usart2Rx_Callback();
+	}
+}
+
+void USART6_IRQHandler(void){
+	//Evaluamos si la interrupcion que se dio es por RX
+	if(USART6->SR & USART_SR_RXNE){
+		auxRxData = (uint8_t) USART6->DR;
+		usart6Rx_Callback();
+	}
+}
+
+__attribute__ ((weak)) void usart1Rx_Callback(void){
+
+	__NOP();
+}
+
+__attribute__ ((weak)) void usart2Rx_Callback(void){
+
+	__NOP();
+}
+
+__attribute__ ((weak)) void usart6Rx_Callback(void){
+
+	__NOP();
+}

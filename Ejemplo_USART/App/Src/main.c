@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include "stm32f4xx.h"
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
@@ -32,7 +33,8 @@ USART_Handler_t usart1Comm		= {0};
 USART_Handler_t usart2Comm		= {0};
 USART_Handler_t usart6Comm		= {0};
 uint8_t sendMsg = 0;
-uint8_t counter = 0;
+char mensaje[] = "Prueba de protocolo \n";
+char dataMsg[64] = {0};
 
 //Definir las cabeceras de las funciones del main
 void initSystem(void);
@@ -49,8 +51,16 @@ int main(void){
 
 	/*Loop forever*/
 	while(1){
-		if(sendMsg == 4){
-			writeMsg (&usart2Comm, "Este protocolo funciona cuando le da la gana");
+		if(sendMsg == 12){
+			//writeMsg (&usart2Comm, mensaje);
+
+			//Crea el string y lo almacena en el arreglo dataMsg
+			sprintf(dataMsg, "El valor del dato recibido es = %X \n", sendMsg);
+			writeMsg(&usart2Comm, dataMsg);
+
+			sprintf(dataMsg, "El valor de Pi es = %f \n", M_PI);
+			writeMsg(&usart2Comm, dataMsg);
+
 			sendMsg = 0;
 
 		}
