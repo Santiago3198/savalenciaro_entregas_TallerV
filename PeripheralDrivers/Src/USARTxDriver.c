@@ -13,6 +13,9 @@
  * Recordar que siempre se debe comenzar con activar la señal de reloj
  * del periferico que se está utilizando.
  */
+
+uint8_t auxRxData;
+
 void USART_Config(USART_Handler_t *ptrUsartHandler){
 	/* 1. Activamos la señal de reloj que viene desde el BUS al que pertenece el periferico */
 	/* Lo debemos hacer para cada uno de las pisbles opciones que tengamos (USART1, USART2, USART6) */
@@ -209,7 +212,7 @@ void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend){
 }
 
 //Lectura del caracter que llega por la interfase serial
-void getRxData(void){
+uint8_t getRxData(void){
 	return auxRxData;
 }
 

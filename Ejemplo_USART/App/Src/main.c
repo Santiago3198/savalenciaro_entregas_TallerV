@@ -51,7 +51,7 @@ int main(void){
 
 	/*Loop forever*/
 	while(1){
-		if(sendMsg == 12){
+		if(sendMsg == 5){
 			//writeMsg (&usart2Comm, mensaje);
 
 			//Crea el string y lo almacena en el arreglo dataMsg
