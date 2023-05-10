@@ -177,6 +177,51 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~(USART_CR1_UE);
 		ptrUsartHandler->ptrUSARTx->CR1 |= (USART_CR1_UE);
 	}
+
+// 3. Activamos las interrupciones para cuando algun puerto de USART recibe un dato
+
+	//3.1 Desactivamos las interrupciones globales
+	__disable_irq();
+
+	//3.2 Activar las interrupciones por recepcion
+	if(ptrUsartHandler->USART_Config.USART_enableIntRX == USART_RX_INTERRUP_ENABLE ){
+		ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_RXNEIE;
+
+	}else if(ptrUsartHandler->USART_Config.USART_enableIntRX == USART_RX_INTERRUP_DISABLE){
+		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_RXNEIE;
+
+	}else{
+		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_RXNEIE;
+	}
+
+	//3.3 Activar las interrupciones por transmision
+	if(ptrUsartHandler->USART_Config.USART_enableIntTX == USART_TX_INTERRUP_ENABLE ){
+			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TXEIE;
+
+		}else if(ptrUsartHandler->USART_Config.USART_enableIntTX == USART_TX_INTERRUP_DISABLE){
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TXEIE;
+
+		}else{
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TXEIE;
+		}
+
+	//3.4 Matricular las interrupciones en NVIC
+	//USART1
+	if(ptrUsartHandler->ptrUSARTx == USART1){
+		NVIC_EnableIRQ(USART1_IRQn);
+
+	//USART2
+	}else if(ptrUsartHandler->ptrUSARTx == USART2){
+		NVIC_EnableIRQ(USART2_IRQn);
+
+	//USART6
+	}else if(ptrUsartHandler->ptrUSARTx == USART6){
+		NVIC_EnableIRQ(USART6_IRQn);
+	}
+
+
+	//3.5 Activar las interrupciones globales
+	__enable_irq();
 }
 
 /* Funcion para escribir un solo char */
@@ -240,17 +285,17 @@ void USART6_IRQHandler(void){
 	}
 }
 
-__attribute__ ((weak)) void usart1Rx_Callback(void){
+__attribute__((weak)) void usart1Rx_Callback(void){
 
 	__NOP();
 }
 
-__attribute__ ((weak)) void usart2Rx_Callback(void){
+__attribute__((weak)) void usart2Rx_Callback(void){
 
 	__NOP();
 }
 
-__attribute__ ((weak)) void usart6Rx_Callback(void){
+__attribute__((weak)) void usart6Rx_Callback(void){
 
 	__NOP();
 }
