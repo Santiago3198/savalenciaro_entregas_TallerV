@@ -5,6 +5,12 @@
  * @brief          : Main program body
  ******************************************************************************
 */
+/*
+ * Descomentar la siguiente linea y agregar al main si se requiere el uso
+ * de la FPU.
+ * SCB->CPACR |= (0xF << 20);
+ * Activacion del coprocesador matematico
+ */
 
 #include <stdint.h>
 #include <stdio.h>

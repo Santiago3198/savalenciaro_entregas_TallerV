@@ -23,19 +23,21 @@ BasicTimer_Handler_t handlerBlinkyTimer 	= {0};
 EXTI_Config_t handlerUserButtonExti 		= {0};
 
 //Elementos para la comunicacion serial
-GPIO_Handler_t handlerPinTX1	= {0};
-GPIO_Handler_t handlerPinRX1	= {0};
+
 GPIO_Handler_t handlerPinTX2	= {0};
 GPIO_Handler_t handlerPinRX2 	= {0};
-GPIO_Handler_t handlerPinTX6	= {0};
-GPIO_Handler_t handlerPinRX6	= {0};
-USART_Handler_t usart1Comm		= {0};
+
+
 USART_Handler_t usart2Comm		= {0};
-USART_Handler_t usart6Comm		= {0};
+
 uint8_t sendMsg = 0;
 uint8_t usart2DataReceived = 0;
 
 char dataMsg[64] = {0};
+
+float valueA = 123.123f;
+float valueB = 456.567f;
+float valueC = 0.0f;
 
 //Definir las cabeceras de las funciones del main
 void initSystem(void);
@@ -47,38 +49,21 @@ void initSystem(void);
 
 int main(void){
 
+	//Activamos el coprocesador matematico
+	SCB->CPACR |= (0xF << 20);
+
 	//Inicializamos todos los elementos del sistema
 	initSystem();
 
 	/*Loop forever*/
 	while(1){
-
-		/*El siguiente era el main del otro ejemplo de USART, para revisarlo
-		 * while(1){
-		if(sendMsg == 12){
-			//writeMsg (&usart2Comm, mensaje);
-
-			//Crea el string y lo almacena en el arreglo dataMsg
-			sprintf(dataMsg, "El valor del dato recibido es = %X \n", sendMsg);
-			writeMsg(&usart2Comm, dataMsg);
-
-			sprintf(dataMsg, "El valor de Pi es = %f \n", M_PI);
-			writeMsg(&usart2Comm, dataMsg);
-
-			sendMsg = 0;
-		 */
-
-//		if(sendMsg > 4){
-//
-//			sprintf(dataMsg, "El valor de Pi es = %f \n", M_PI);
-//			//writeMsg(&usart2Comm, dataMsg);
-//
-//			sendMsg = 0;
-//		}
-
 		if(usart2DataReceived != '\0'){
-			//Echo para enviar de vuelta el mensaje recibido
-			sprintf(dataMsg, "Recibido el sgte caracter = %c \n", usart2DataReceived);
+
+			//Realiza operacion de punto flotante cuando se recibe un caracter en USART2
+
+			valueC = valueA * valueB;
+
+			sprintf(dataMsg, "ValueC = %#.3f \n", valueC);
 			writeMsg(&usart2Comm, dataMsg);
 
 			usart2DataReceived = '\0';
@@ -123,18 +108,6 @@ void initSystem(void){
 	extInt_Config(&handlerUserButtonExti);
 
 	//Configuracion de la comunicacion serial
-	handlerPinTX1.pGPIOx									= GPIOA;
-	handlerPinTX1.GPIO_PinConfig.GPIO_PinNumber				= PIN_9;
-	handlerPinTX1.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinTX1.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
-	GPIO_Config(&handlerPinTX1);
-
-	handlerPinRX1.pGPIOx									= GPIOA;
-	handlerPinRX1.GPIO_PinConfig.GPIO_PinNumber				= PIN_10;
-	handlerPinRX1.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinRX1.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
-	GPIO_Config(&handlerPinRX1);
-
 	handlerPinTX2.pGPIOx									= GPIOA;
 	handlerPinTX2.GPIO_PinConfig.GPIO_PinNumber				= PIN_2;
 	handlerPinTX2.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
@@ -147,28 +120,6 @@ void initSystem(void){
 	handlerPinRX2.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
 	GPIO_Config(&handlerPinRX2);
 
-	handlerPinTX6.pGPIOx									= GPIOA;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinNumber				= PIN_11;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinAltFunMode			= AF8;
-	GPIO_Config(&handlerPinTX6);
-
-	handlerPinRX6.pGPIOx									= GPIOA;
-	handlerPinRX6.GPIO_PinConfig.GPIO_PinNumber				= PIN_12;
-	handlerPinRX6.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinRX6.GPIO_PinConfig.GPIO_PinAltFunMode			= AF8;
-	GPIO_Config(&handlerPinRX6);
-
-	usart1Comm.ptrUSARTx	 								= USART1;
-	usart1Comm.USART_Config.USART_baudrate					= USART_BAUDRATE_9600;
-	usart1Comm.USART_Config.USART_datasize					= USART_DATASIZE_8BIT;
-	usart1Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
-	usart1Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
-	usart1Comm.USART_Config.USART_mode						= USART_MODE_RXTX;
-	usart1Comm.USART_Config.USART_enableIntTX				= USART_TX_INTERRUP_DISABLE;
-	usart1Comm.USART_Config.USART_enableIntRX				= USART_RX_INTERRUP_ENABLE;
-	USART_Config(&usart1Comm);
-
 	usart2Comm.ptrUSARTx	 								= USART2;
 	usart2Comm.USART_Config.USART_baudrate					= USART_BAUDRATE_9600;
 	usart2Comm.USART_Config.USART_datasize					= USART_DATASIZE_8BIT;
@@ -178,16 +129,6 @@ void initSystem(void){
 	usart2Comm.USART_Config.USART_enableIntTX				= USART_TX_INTERRUP_DISABLE;
 	usart2Comm.USART_Config.USART_enableIntRX				= USART_RX_INTERRUP_ENABLE;
 	USART_Config(&usart2Comm);
-
-	usart6Comm.ptrUSARTx	 								= USART6;
-	usart6Comm.USART_Config.USART_baudrate					= USART_BAUDRATE_9600;
-	usart6Comm.USART_Config.USART_datasize					= USART_DATASIZE_8BIT;
-	usart6Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
-	usart6Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
-	usart6Comm.USART_Config.USART_mode						= USART_MODE_RXTX;
-	usart6Comm.USART_Config.USART_enableIntTX				= USART_TX_INTERRUP_DISABLE;
-	usart6Comm.USART_Config.USART_enableIntRX				= USART_RX_INTERRUP_ENABLE;
-	USART_Config(&usart6Comm);
 }
 
 /*

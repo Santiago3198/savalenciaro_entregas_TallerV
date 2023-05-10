@@ -16,6 +16,8 @@
 #include "ExtiDriver.h"
 #include "USARTxDriver.h"
 
+#include "arm_math.h"
+
 //Definicion de los handlers necesarios
 GPIO_Handler_t handlerBlinkyPin 			= {0};
 GPIO_Handler_t handlerUserButton 			= {0};
@@ -23,18 +25,21 @@ BasicTimer_Handler_t handlerBlinkyTimer 	= {0};
 EXTI_Config_t handlerUserButtonExti 		= {0};
 
 //Elementos para la comunicacion serial
-GPIO_Handler_t handlerPinTX1	= {0};
-GPIO_Handler_t handlerPinRX1	= {0};
+
 GPIO_Handler_t handlerPinTX2	= {0};
 GPIO_Handler_t handlerPinRX2 	= {0};
-GPIO_Handler_t handlerPinTX6	= {0};
-GPIO_Handler_t handlerPinRX6	= {0};
-USART_Handler_t usart1Comm		= {0};
+
 USART_Handler_t usart2Comm		= {0};
-USART_Handler_t usart6Comm		= {0};
+
 uint8_t sendMsg = 0;
-char mensaje[] = "Prueba de protocolo \n";
+uint8_t usart2DataReceived = 0;
+
 char dataMsg[64] = {0};
+
+//Arreglos para puebas de las librerias CMSIS
+float32_t srcNumber[4] = {-8.23, 20, -32.55, -68.32};
+float32_t desNumber[4] = {0};
+uint8_t dataSize = 0;
 
 //Definir las cabeceras de las funciones del main
 void initSystem(void);
@@ -46,23 +51,25 @@ void initSystem(void);
 
 int main(void){
 
+	//Activamos el coprocesador matematico
+	SCB->CPACR |= (0xF << 20);
+
 	//Inicializamos todos los elementos del sistema
 	initSystem();
 
 	/*Loop forever*/
 	while(1){
-		if(sendMsg == 12){
-			//writeMsg (&usart2Comm, mensaje);
+		if(usart2DataReceived != '\0'){
 
-			//Crea el string y lo almacena en el arreglo dataMsg
-			sprintf(dataMsg, "El valor del dato recibido es = %X \n", sendMsg);
+			dataSize = 4;
+
+			//Se ejecuta la funcion para obtener el valor absoluto
+			arm_abs_f32(srcNumber, desNumber, dataSize);
+
+			sprintf(dataMsg, "Valor abs de %#.2f = %#.2f \n", srcNumber[0], desNumber[0]);
 			writeMsg(&usart2Comm, dataMsg);
 
-			sprintf(dataMsg, "El valor de Pi es = %f \n", M_PI);
-			writeMsg(&usart2Comm, dataMsg);
-
-			sendMsg = 0;
-
+			usart2DataReceived = '\0';
 		}
 	}
 	return 0;
@@ -104,18 +111,6 @@ void initSystem(void){
 	extInt_Config(&handlerUserButtonExti);
 
 	//Configuracion de la comunicacion serial
-	handlerPinTX1.pGPIOx									= GPIOA;
-	handlerPinTX1.GPIO_PinConfig.GPIO_PinNumber				= PIN_9;
-	handlerPinTX1.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinTX1.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
-	GPIO_Config(&handlerPinTX1);
-
-	handlerPinRX1.pGPIOx									= GPIOA;
-	handlerPinRX1.GPIO_PinConfig.GPIO_PinNumber				= PIN_10;
-	handlerPinRX1.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinRX1.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
-	GPIO_Config(&handlerPinRX1);
-
 	handlerPinTX2.pGPIOx									= GPIOA;
 	handlerPinTX2.GPIO_PinConfig.GPIO_PinNumber				= PIN_2;
 	handlerPinTX2.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
@@ -128,41 +123,15 @@ void initSystem(void){
 	handlerPinRX2.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
 	GPIO_Config(&handlerPinRX2);
 
-	handlerPinTX6.pGPIOx									= GPIOA;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinNumber				= PIN_11;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinAltFunMode			= AF8;
-	GPIO_Config(&handlerPinTX6);
-
-	handlerPinRX6.pGPIOx									= GPIOA;
-	handlerPinRX6.GPIO_PinConfig.GPIO_PinNumber				= PIN_12;
-	handlerPinRX6.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinRX6.GPIO_PinConfig.GPIO_PinAltFunMode			= AF8;
-	GPIO_Config(&handlerPinRX6);
-
-	usart1Comm.ptrUSARTx	 								= USART1;
-	usart1Comm.USART_Config.USART_baudrate					= USART_BAUDRATE_9600;
-	usart1Comm.USART_Config.USART_datasize					= USART_DATASIZE_8BIT;
-	usart1Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
-	usart1Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
-	usart1Comm.USART_Config.USART_mode						= USART_MODE_RXTX;
-	USART_Config(&usart1Comm);
-
 	usart2Comm.ptrUSARTx	 								= USART2;
 	usart2Comm.USART_Config.USART_baudrate					= USART_BAUDRATE_9600;
 	usart2Comm.USART_Config.USART_datasize					= USART_DATASIZE_8BIT;
 	usart2Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
 	usart2Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
 	usart2Comm.USART_Config.USART_mode						= USART_MODE_RXTX;
+	usart2Comm.USART_Config.USART_enableIntTX				= USART_TX_INTERRUP_DISABLE;
+	usart2Comm.USART_Config.USART_enableIntRX				= USART_RX_INTERRUP_ENABLE;
 	USART_Config(&usart2Comm);
-
-	usart6Comm.ptrUSARTx	 								= USART6;
-	usart6Comm.USART_Config.USART_baudrate					= USART_BAUDRATE_9600;
-	usart6Comm.USART_Config.USART_datasize					= USART_DATASIZE_8BIT;
-	usart6Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
-	usart6Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
-	usart6Comm.USART_Config.USART_mode						= USART_MODE_RXTX;
-	USART_Config(&usart6Comm);
 }
 
 /*
@@ -178,3 +147,11 @@ void callback_extInt13(void){
 	__NOP();
 }
 
+/*
+ * Esta funcion se ejecuta cada vez que un caracter es recibido
+ * por el puerto USART2
+ */
+
+void usart2Rx_Callback(void){
+	usart2DataReceived = getRxData();
+}
