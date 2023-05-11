@@ -41,6 +41,10 @@ float32_t srcNumber[4] = {-8.23, 20, -32.55, -68.32};
 float32_t desNumber[4] = {0};
 uint8_t dataSize = 0;
 
+//Para usar la funcion seno de las librerias
+float32_t sineValue = 0.0;
+float32_t sineArgValue = 0.0;
+
 //Definir las cabeceras de las funciones del main
 void initSystem(void);
 
@@ -59,17 +63,33 @@ int main(void){
 
 	/*Loop forever*/
 	while(1){
-		if(usart2DataReceived != '\0'){
+
+		//Para probar la funcion valor absoluto
+		if(usart2DataReceived == 'A'){
 
 			dataSize = 4;
 
 			//Se ejecuta la funcion para obtener el valor absoluto
 			arm_abs_f32(srcNumber, desNumber, dataSize);
 
-			sprintf(dataMsg, "Valor abs de %#.2f = %#.2f \n", srcNumber[0], desNumber[0]);
+			for(int j=0; j<4; j++){
+				sprintf(dataMsg, "Valor abs de %#.2f = %#.2f \n", srcNumber[j], desNumber[j]);
+				writeMsg(&usart2Comm, dataMsg);
+			}
+			usart2DataReceived = '\0';
+		}
+
+		//Para probar la funcion seno
+		if(usart2DataReceived == 'B'){
+			sineArgValue = M_PI/4;
+
+			//La funcion recibe el valor en radianes
+			sineValue = arm_sin_f32(sineArgValue);
+			sprintf(dataMsg, "Sin(%#.2f) = %#.6f \n", sineArgValue, sineValue);
 			writeMsg(&usart2Comm, dataMsg);
 
 			usart2DataReceived = '\0';
+
 		}
 	}
 	return 0;

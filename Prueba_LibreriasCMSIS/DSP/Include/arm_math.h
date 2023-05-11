@@ -201,7 +201,7 @@
 //#include "dsp/support_functions.h"
 //#include "dsp/distance_functions.h"
 //#include "dsp/svm_functions.h"
-//#include "dsp/fast_math_functions.h"
+#include "dsp/fast_math_functions.h"
 //#include "dsp/transform_functions.h"
 //#include "dsp/filtering_functions.h"
 //#include "dsp/quaternion_math_functions.h"
