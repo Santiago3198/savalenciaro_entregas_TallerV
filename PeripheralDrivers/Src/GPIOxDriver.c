@@ -173,19 +173,3 @@ void GPIOxTooglePin(GPIO_Handler_t *ptrPinHandler){
 
 	GPIO_WritePin (ptrPinHandler, newState);
 }
-
-void delay_ms(uint32_t ms) {
-    SysTick_Config(SystemCoreClock / 1000); // Configurar SysTick a 1ms
-    uint32_t start = SysTick->VAL; // Valor actual del contador
-    uint32_t count = 0; // Cuenta el tiempo de retardo transcurrido
-
-    while (count < ms) {
-        uint32_t current = SysTick->VAL;
-        if (current > start) { // El contador se desbordó
-            count += (start + 0xFFFFFFFF - current) / (SystemCoreClock / 1000);
-        } else { // El contador no se desbordó
-            count += (start - current) / (SystemCoreClock / 1000);
-        }
-        start = current; // Actualizar el valor de inicio del contador
-    }
-}

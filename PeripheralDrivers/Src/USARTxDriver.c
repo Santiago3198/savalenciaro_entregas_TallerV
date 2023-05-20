@@ -13,6 +13,9 @@
  * Recordar que siempre se debe comenzar con activar la señal de reloj
  * del periferico que se está utilizando.
  */
+
+uint8_t auxRxData;
+
 void USART_Config(USART_Handler_t *ptrUsartHandler){
 	/* 1. Activamos la señal de reloj que viene desde el BUS al que pertenece el periferico */
 	/* Lo debemos hacer para cada uno de las pisbles opciones que tengamos (USART1, USART2, USART6) */
@@ -174,6 +177,51 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		ptrUsartHandler->ptrUSARTx->CR1 &= ~(USART_CR1_UE);
 		ptrUsartHandler->ptrUSARTx->CR1 |= (USART_CR1_UE);
 	}
+
+// 3. Activamos las interrupciones para cuando algun puerto de USART recibe un dato
+
+	//3.1 Desactivamos las interrupciones globales
+	__disable_irq();
+
+	//3.2 Activar las interrupciones por recepcion
+	if(ptrUsartHandler->USART_Config.USART_enableIntRX == USART_RX_INTERRUP_ENABLE ){
+		ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_RXNEIE;
+
+	}else if(ptrUsartHandler->USART_Config.USART_enableIntRX == USART_RX_INTERRUP_DISABLE){
+		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_RXNEIE;
+
+	}else{
+		ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_RXNEIE;
+	}
+
+	//3.3 Activar las interrupciones por transmision
+	if(ptrUsartHandler->USART_Config.USART_enableIntTX == USART_TX_INTERRUP_ENABLE ){
+			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TXEIE;
+
+		}else if(ptrUsartHandler->USART_Config.USART_enableIntTX == USART_TX_INTERRUP_DISABLE){
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TXEIE;
+
+		}else{
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TXEIE;
+		}
+
+	//3.4 Matricular las interrupciones en NVIC
+	//USART1
+	if(ptrUsartHandler->ptrUSARTx == USART1){
+		NVIC_EnableIRQ(USART1_IRQn);
+
+	//USART2
+	}else if(ptrUsartHandler->ptrUSARTx == USART2){
+		NVIC_EnableIRQ(USART2_IRQn);
+
+	//USART6
+	}else if(ptrUsartHandler->ptrUSARTx == USART6){
+		NVIC_EnableIRQ(USART6_IRQn);
+	}
+
+
+	//3.5 Activar las interrupciones globales
+	__enable_irq();
 }
 
 /* Funcion para escribir un solo char */
@@ -188,12 +236,13 @@ int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend){
 }
 
 /*Funcion para leer un mensaje*/
-int readChar(USART_Handler_t *ptrUsartHandler, int dataToReceive){
+uint8_t readChar(USART_Handler_t *ptrUsartHandler){
+	uint8_t dataToReceive;
 	while( !(ptrUsartHandler->ptrUSARTx->SR & USART_SR_RXNE)){
 		__NOP();
 	}
 
-	ptrUsartHandler->ptrUSARTx->DR = dataToReceive;
+	dataToReceive = ptrUsartHandler->ptrUSARTx->DR;
 
 	return dataToReceive;
 
@@ -207,3 +256,46 @@ void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend){
 	}
 }
 
+//Lectura del caracter que llega por la interfase serial
+uint8_t getRxData(void){
+	return auxRxData;
+}
+
+void USART1_IRQHandler(void){
+	//Evaluamos si la interrupcion que se dio es por RX
+	if(USART1->SR & USART_SR_RXNE){
+		auxRxData = (uint8_t) USART1->DR;
+		usart1Rx_Callback();
+	}
+}
+
+void USART2_IRQHandler(void){
+	//Evaluamos si la interrupcion que se dio es por RX
+	if(USART2->SR & USART_SR_RXNE){
+		auxRxData = (uint8_t) USART2->DR;
+		usart2Rx_Callback();
+	}
+}
+
+void USART6_IRQHandler(void){
+	//Evaluamos si la interrupcion que se dio es por RX
+	if(USART6->SR & USART_SR_RXNE){
+		auxRxData = (uint8_t) USART6->DR;
+		usart6Rx_Callback();
+	}
+}
+
+__attribute__((weak)) void usart1Rx_Callback(void){
+
+	__NOP();
+}
+
+__attribute__((weak)) void usart2Rx_Callback(void){
+
+	__NOP();
+}
+
+__attribute__((weak)) void usart6Rx_Callback(void){
+
+	__NOP();
+}

@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include "stm32f4xx.h"
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
@@ -32,7 +33,9 @@ USART_Handler_t usart1Comm		= {0};
 USART_Handler_t usart2Comm		= {0};
 USART_Handler_t usart6Comm		= {0};
 uint8_t sendMsg = 0;
-uint8_t counter = 0;
+uint8_t usart2DataReceived = 0;
+
+char dataMsg[64] = {0};
 
 //Definir las cabeceras de las funciones del main
 void initSystem(void);
@@ -49,10 +52,36 @@ int main(void){
 
 	/*Loop forever*/
 	while(1){
-		if(sendMsg == 4){
-			writeMsg (&usart2Comm, "Este protocolo funciona cuando le da la gana");
-			sendMsg = 0;
 
+		/*El siguiente era el main del otro ejemplo de USART, para revisarlo
+		 * while(1){
+		if(sendMsg == 12){
+			//writeMsg (&usart2Comm, mensaje);
+
+			//Crea el string y lo almacena en el arreglo dataMsg
+			sprintf(dataMsg, "El valor del dato recibido es = %X \n", sendMsg);
+			writeMsg(&usart2Comm, dataMsg);
+
+			sprintf(dataMsg, "El valor de Pi es = %f \n", M_PI);
+			writeMsg(&usart2Comm, dataMsg);
+
+			sendMsg = 0;
+		 */
+
+//		if(sendMsg > 4){
+//
+//			sprintf(dataMsg, "El valor de Pi es = %f \n", M_PI);
+//			//writeMsg(&usart2Comm, dataMsg);
+//
+//			sendMsg = 0;
+//		}
+
+		if(usart2DataReceived != '\0'){
+			//Echo para enviar de vuelta el mensaje recibido
+			sprintf(dataMsg, "Recibido el sgte caracter = %c \n", usart2DataReceived);
+			writeMsg(&usart2Comm, dataMsg);
+
+			usart2DataReceived = '\0';
 		}
 	}
 	return 0;
@@ -136,6 +165,8 @@ void initSystem(void){
 	usart1Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
 	usart1Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
 	usart1Comm.USART_Config.USART_mode						= USART_MODE_RXTX;
+	usart1Comm.USART_Config.USART_enableIntTX				= USART_TX_INTERRUP_DISABLE;
+	usart1Comm.USART_Config.USART_enableIntRX				= USART_RX_INTERRUP_ENABLE;
 	USART_Config(&usart1Comm);
 
 	usart2Comm.ptrUSARTx	 								= USART2;
@@ -144,6 +175,8 @@ void initSystem(void){
 	usart2Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
 	usart2Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
 	usart2Comm.USART_Config.USART_mode						= USART_MODE_RXTX;
+	usart2Comm.USART_Config.USART_enableIntTX				= USART_TX_INTERRUP_DISABLE;
+	usart2Comm.USART_Config.USART_enableIntRX				= USART_RX_INTERRUP_ENABLE;
 	USART_Config(&usart2Comm);
 
 	usart6Comm.ptrUSARTx	 								= USART6;
@@ -152,6 +185,8 @@ void initSystem(void){
 	usart6Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
 	usart6Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
 	usart6Comm.USART_Config.USART_mode						= USART_MODE_RXTX;
+	usart6Comm.USART_Config.USART_enableIntTX				= USART_TX_INTERRUP_DISABLE;
+	usart6Comm.USART_Config.USART_enableIntRX				= USART_RX_INTERRUP_ENABLE;
 	USART_Config(&usart6Comm);
 }
 
@@ -168,3 +203,11 @@ void callback_extInt13(void){
 	__NOP();
 }
 
+/*
+ * Esta funcion se ejecuta cada vez que un caracter es recibido
+ * por el puerto USART2
+ */
+
+void usart2Rx_Callback(void){
+	usart2DataReceived = getRxData();
+}
