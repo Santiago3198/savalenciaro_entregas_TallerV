@@ -20,9 +20,9 @@
 
 typedef struct{
 	uint8_t channel;		//Canal PWM relacionado con el TIMER
-	uint8_t prescaler;		//A qué velocidad se incrementa el TIMER
-	uint8_t periodo;		//Indica el número de veces que el TIMER se incrementa, el periodo de la frecuencia viene dado por Time_Fosc*PSC*ARR
-	uint8_t duttyCicle;		//Valor en % del tiempo que la señal está en alto
+	uint32_t prescaler;		//A qué velocidad se incrementa el TIMER
+	uint16_t periodo;		//Indica el número de veces que el TIMER se incrementa, el periodo de la frecuencia viene dado por Time_Fosc*PSC*ARR
+	uint16_t duttyCicle;		//Valor en % del tiempo que la señal está en alto
 
 }PWM_Config_t;
 
@@ -35,7 +35,7 @@ typedef struct{
 /*Prototipos de las funciones*/
 
 void pwm_Config(PWM_Handler_t *ptrPwmHandler);
-void setFrecuency(PWM_Handler_t *ptrPwmHandler);
+void setFrequency(PWM_Handler_t *ptrPwmHandler);
 void updateFrequency(PWM_Handler_t *ptrPwmHandler, uint16_t newFreq);
 void setDuttyCycle(PWM_Handler_t *ptrPwmHandler);
 void updateDuttyCycle(PWM_Handler_t *ptrPwmHandler, uint16_t newDutty);

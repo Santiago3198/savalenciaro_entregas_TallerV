@@ -11,29 +11,30 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 
 	/*1. Activar la señal de reloj del periférico requerido*/
 	if(ptrPwmHandler->ptrTIMx == TIM2){
-		//Agregar codigo
+
+		RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 	}
 	else if(ptrPwmHandler->ptrTIMx == TIM3){
-		//Agregar código
+		RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 	}
 	else if(ptrPwmHandler->ptrTIMx == TIM4){
-		//Agregar código
+		RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
 	}
 	else if(ptrPwmHandler->ptrTIMx == TIM5){
-		//Agregar código
+		RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
 	}
 	else{
 		__NOP();
 	}
 
 	/*1. Cargamos la frecuencia deseada */
-	setFrecuency(ptrPwmHandler);
+	setFrequency(ptrPwmHandler);
 
 	/*2. Cargamos el valor del Dutty-Cycle */
 	setDuttyCycle(ptrPwmHandler);
 
 	/*2a. Estamos en UP mode, el límite se carga al ARR y se comienza en 0 */
-	//Agregar código
+	ptrPwmHandler->ptrTIMx->ARR &= ~TIM_CR1_DIR;
 
 	/*3. Configuramos los bits CCxS del registro TIMy_CCMR1,
 	 *de forma que sea modo salida.
@@ -50,27 +51,60 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 	switch(ptrPwmHandler->config.channel){
 	case PWM_CHANNEL_1:{
 		//Seleccionamos como salida el canal
-		//Agregar código
+		ptrPwmHandler->ptrTIMx->CCMR1 &= (0b00 << 0);
 
 		//Configuramos el canal como PWM
-		//Agregue código
+		ptrPwmHandler->ptrTIMx->CCMR1 &= (0b000 << 4);
+		ptrPwmHandler->ptrTIMx->CCMR1 |= (0b110 << 4);
 
 		//Activamos la funcionalidad de pre-load
-		//Agregue código
+		ptrPwmHandler->ptrTIMx->CCMR1 &= (0b00 << 2);
+		ptrPwmHandler->ptrTIMx->CCMR1 |= (0b11 << 2);
 
 		break;
 	}
 	case PWM_CHANNEL_2:{
 		//Seleccionamos como salida el canal
-		//Agregar código
+		ptrPwmHandler->ptrTIMx->CCMR1 &= (0b00 << 8);
 
 		//Configuramos el canal como PWM
-		//Agregar código
+		ptrPwmHandler->ptrTIMx->CCMR1 &= (0b000 << 12);
+		ptrPwmHandler->ptrTIMx->CCMR1 |= (0b110 << 12);
 
 		//Activamos la funcionalidad de pre-load
-		//Agregar código
+		ptrPwmHandler->ptrTIMx->CCMR1 &= (0b00 << 10);
+		ptrPwmHandler->ptrTIMx->CCMR1 |= (0b11 << 10);
+
+		break;
 	}
-	//Agregar los otros dos casos
+	case PWM_CHANNEL_3:{
+		//Seleccionamos como salida el canal
+		ptrPwmHandler->ptrTIMx->CCMR2 &= (0b00 << 0);
+
+		//Configuramos el canal como PWM
+		ptrPwmHandler->ptrTIMx->CCMR2 &= (0b000 << 4);
+		ptrPwmHandler->ptrTIMx->CCMR2 |= (0b110 << 4);
+
+		//Activamos la funcionalidad del preload
+		ptrPwmHandler->ptrTIMx->CCMR2 &= (0b00 << 2);
+		ptrPwmHandler->ptrTIMx->CCMR2 |= (0b11 << 2);
+
+		break;
+	}
+	case PWM_CHANNEL_4:{
+		//Seleccionamos como salida el canal
+		ptrPwmHandler->ptrTIMx->CCMR2 &= (0b00 << 8);
+
+		//Configuramos el canal como PWM
+		ptrPwmHandler->ptrTIMx->CCMR2 &= (0b000 << 12);
+		ptrPwmHandler->ptrTIMx->CCMR2 |= (0b110 << 12);
+
+		//Activamos la funcionalidad de pre-load
+		ptrPwmHandler->ptrTIMx->CCMR2 &= (0b00 << 10);
+		ptrPwmHandler->ptrTIMx->CCMR2 |= (0b11 << 10);
+
+		break;
+	}
 	default:{
 		break;
 	}
@@ -81,22 +115,55 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 	}//fin del switch-case
 }
 
+/*Función para activar el Timer y activar todo el módulo PWM */
+void startPwmSignal(PWM_Handler_t *ptrPwmHandler){
+	switch(ptrPwmHandler->ptrTIMx){
+	case TIM2:{
+		ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_CEN;
+		ptrPwmHandler->ptrTIMx->CR1 |= TIM_CR1_CEN;
+		break;
+	}
+	case TIM3:{
+		ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_CEN;
+		ptrPwmHandler->ptrTIMx->CR1 |= TIM_CR1_CEN;
+		break;
+	}
+	}
+}
+
 /* Funcion para desactivar el Timer y detener todo el módulo PWM */
 void stopPwmSignal(PWM_Handler_t *ptrPwmHandler){
-	//Agregar código
+
 }
 
 /* Función encargada de activar cada uno de los canales con los que cuenta el TimerX */
 void enableOutput(PWM_Handler_t *ptrPwmHandler){
 	switch (ptrPwmHandler->config.channel){
 	case PWM_CHANNEL_1:{
+
 		//Activamos la salida del canal 1
-		//Agregar código
+		ptrPwmHandler->ptrTIMx->CCER &= (0b0 << 0);
+		ptrPwmHandler->ptrTIMx->CCER |= (0b1 << 0);
 		break;
 	}
+	case PWM_CHANNEL_2:{
 
-	//Agregar código para los otros tres casos
+		//Activamos la salida del canal 2
+		ptrPwmHandler->ptrTIMx->CCER &= (0b0 << 4);
+		ptrPwmHandler->ptrTIMx->CCER |= (0b1 << 4);
+	}
+	case PWM_CHANNEL_3:{
 
+		//Activamos la salida del canal 3
+		ptrPwmHandler->ptrTIMx->CCER &= (0b0 << 8);
+		ptrPwmHandler->ptrTIMx->CCER |= (0b1 << 8);
+	}
+	case PWM_CHANNEL_4:{
+
+		//Activamos la salida del canal 4
+		ptrPwmHandler->ptrTIMx->CCER &= (0b0 << 12);
+		ptrPwmHandler->ptrTIMx->CCER |= (0b1 << 12);
+	}
 	default:{
 		break;
 	}
@@ -104,25 +171,34 @@ void enableOutput(PWM_Handler_t *ptrPwmHandler){
 }
 
 /*
- * La frecuencia s definida por el conjunto formado por el preescaler
+ * La frecuencia es definida por el conjunto formado por el preescaler
  * (PSC) y el valor límite al que llega el Timer (ARR), con estos dos se establece
  * la frecuencia
  */
-void setFrecuency(PWM_Handler_t *ptrPwmHandler){
+void setFrequency(PWM_Handler_t *ptrPwmHandler){
 
 	/* Cargamos el valor del prescaler, nos define la velocidad (ns)
 	 * a la cual se incrementa el Timer
 	 */
-	//Agregar código
+	ptrPwmHandler->ptrTIMx->PSC = ptrPwmHandler->config.prescaler;
 
 	/* Cargamos el valor del ARR, el cual es el límite
 	 * de incrementos del timer antes de hacer un update y reload
 	 */
-	//Agregar código
+	//ptrPwmHandler->ptrTIMx->ARR =
 }
-
 /*Función para actualizar la frecuencia, funciona de la mano con setFrecuency */
-void updateFrequency(PWM_Handler_t *ptrPwmHandler){
+void updateFrequency(PWM_Handler_t *ptrPwmHandler, uint16_t newFreq){
+
+	//Actualizamos el registro que manipula el periodo
+	//Agregar código
+
+	//Llamamos la función que cambia la frecuencia
+	//Agregar código
+
+}
+/* El valor del Dutty debe estar dado en %, entre el 0% y el 100% */
+void setDuttyCycle(PWM_Handler_t *ptrPwmHandler){
 
 	//Seleccionamos el canal para configurar su Dutty
 	switch(ptrPwmHandler->config.channel){
@@ -131,22 +207,30 @@ void updateFrequency(PWM_Handler_t *ptrPwmHandler){
 
 		break;
 	}
+	case PWM_CHANNEL_2:{
+		ptrPwmHandler->ptrTIMx->CCR2 = ptrPwmHandler->config.duttyCicle;
 
-	//Agregar código con los otros casos
+		break;
+	}
+	case PWM_CHANNEL_3:{
+		ptrPwmHandler->ptrTIMx->CCR3 = ptrPwmHandler->config.duttyCicle;
 
+		break;
+	}
+	case PWM_CHANNEL_4:{
+		ptrPwmHandler->ptrTIMx->CCR4 = ptrPwmHandler->config.duttyCicle;
+	}
 	default:{
 		break;
 	}
-
 	}//Fin del switch-case
 }
-
 /* Función para actualizar el Dutty, funciona de la mano con setDuttyCycle */
-void updateDuttyCucle(PWM_Handler_t *ptrPwmHandler, uint16_t newDutty){
+void updateDuttyCycle(PWM_Handler_t *ptrPwmHandler, uint16_t newDutty){
 
-	//Actualizamos el registro que manipula el Dutty
+	//Actualizamos el registro que manipula el dutty
 	//Agregar código
 
-	//Llamamos a la función que cambia el Dutty y cargamos el nuevo valor
+	//Llamamos la función que cambia el Dutty y cargamos el nuevo valor
 	//Agregar código
 }

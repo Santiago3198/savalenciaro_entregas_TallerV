@@ -86,7 +86,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		/*3a. Estamos en UP_Mode, el limite se carga en ARR y se comienza en 0 */
 		//Configurar el registro que nos controla el modo up or down
 
-		ptrBTimerHandler->ptrTIMx->ARR &= ~TIM_CR1_DIR;  //Preguntar por que debe de ser igual a eso
+		ptrBTimerHandler->ptrTIMx->ARR &= ~TIM_CR1_DIR;
 
 		/*3b. Configuramos el Autoreload. Este es el "limite" hasta donde el CNT va a contar */
 
