@@ -12,6 +12,14 @@ uint16_t freqPLL = 0;
 
 void configPLL(void){
 
+	//Configuramos los preescaler para que los buses funcionen con la nueva velocidad del dispositivo
+	//APB1
+	RCC->CFGR &= ~RCC_CFGR_PPRE1;
+	RCC->CFGR |=
+
+	//APB2
+	RCC->CFGR &= ~RCC_CFGR_PPRE2;
+
 	//Seleccionamos el PLL como reloj del sistema
 	RCC->CFGR &= ~(RCC_CFGR_SW);
 	RCC->CFGR |= (RCC_CFGR_SW);
@@ -21,14 +29,14 @@ void configPLL(void){
 	RCC->CFGR |= (RCC_CFGR_MCO1);
 
 	//Configuración del bit PLLM
-	RCC->PLLCFGR &=
+	//RCC->PLLCFGR &=fffff
 	RCC->PLLCFGR |= (10 << 0);
 
 	//Configuración del bit PLLN
 	RCC->PLLCFGR |= (100 << 6);
 
 	//Configuración del bit PLLP
-	RCC->PLLCFGR &=
+	//RCC->PLLCFGR &=fffff
 	RCC->PLLCFGR |= (2 << 16);
 
 	//Configuración de la memoria flash
