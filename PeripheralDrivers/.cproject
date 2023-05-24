@@ -55,6 +55,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc}/${ProjName}/Inc&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Users\USUARIO\Documents\CMSIS-repo\STM32Cube_FW_F4_V1.27.0\Drivers\CMSIS\Core\Include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Users\USUARIO\Documents\CMSIS-repo\STM32Cube_FW_F4_V1.27.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\Users\cenaida\Documents\GitHub\CMSIS-repo\STM32Cube_FW_F4_V1.27.0\Drivers\CMSIS\Core\Include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\Users\cenaida\Documents\GitHub\CMSIS-repo\STM32Cube_FW_F4_V1.27.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1485032790" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
