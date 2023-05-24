@@ -51,7 +51,7 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 	switch(ptrPwmHandler->config.channel){
 	case PWM_CHANNEL_1:{
 		//Seleccionamos como salida el canal
-		ptrPwmHandler->ptrTIMx->CCMR1 &= (0b00 << 0);
+		ptrPwmHandler->ptrTIMx->CCMR1 &= TIM_CCMR1_CC1S;
 
 		//Configuramos el canal como PWM
 		ptrPwmHandler->ptrTIMx->CCMR1 &= (0b000 << 4);
@@ -117,23 +117,24 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 
 /*Función para activar el Timer y activar todo el módulo PWM */
 void startPwmSignal(PWM_Handler_t *ptrPwmHandler){
-	switch(ptrPwmHandler->ptrTIMx){
-	case TIM2:{
-		ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_CEN;
-		ptrPwmHandler->ptrTIMx->CR1 |= TIM_CR1_CEN;
-		break;
-	}
-	case TIM3:{
-		ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_CEN;
-		ptrPwmHandler->ptrTIMx->CR1 |= TIM_CR1_CEN;
-		break;
-	}
-	}
+	ptrPwmHandler->ptrTIMx->CR1 |= TIM_CR1_ARPE;
+	ptrPwmHandler->ptrTIMx->CR1 |= TIM_CR1_CEN;
 }
 
 /* Funcion para desactivar el Timer y detener todo el módulo PWM */
 void stopPwmSignal(PWM_Handler_t *ptrPwmHandler){
-
+	if(ptrPwmHandler->ptrTIMx == TIM2){
+		ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_CEN;
+	}
+	else if(ptrPwmHandler->ptrTIMx == TIM3){
+		ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_CEN;
+	}
+	else if(ptrPwmHandler->ptrTIMx == TIM4){
+		ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_CEN;
+	}
+	else if(ptrPwmHandler->ptrTIMx == TIM5){
+		ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_CEN;
+	}
 }
 
 /* Función encargada de activar cada uno de los canales con los que cuenta el TimerX */
@@ -185,18 +186,19 @@ void setFrequency(PWM_Handler_t *ptrPwmHandler){
 	/* Cargamos el valor del ARR, el cual es el límite
 	 * de incrementos del timer antes de hacer un update y reload
 	 */
-	//ptrPwmHandler->ptrTIMx->ARR =
+	ptrPwmHandler->ptrTIMx->ARR = ptrPwmHandler->config.periodo;
 }
+
 /*Función para actualizar la frecuencia, funciona de la mano con setFrecuency */
 void updateFrequency(PWM_Handler_t *ptrPwmHandler, uint16_t newFreq){
 
 	//Actualizamos el registro que manipula el periodo
-	//Agregar código
+	ptrPwmHandler->config.periodo = newFreq;
 
 	//Llamamos la función que cambia la frecuencia
-	//Agregar código
-
+	setFrequency(&*ptrPwmHandler);
 }
+
 /* El valor del Dutty debe estar dado en %, entre el 0% y el 100% */
 void setDuttyCycle(PWM_Handler_t *ptrPwmHandler){
 
@@ -225,12 +227,13 @@ void setDuttyCycle(PWM_Handler_t *ptrPwmHandler){
 	}
 	}//Fin del switch-case
 }
+
 /* Función para actualizar el Dutty, funciona de la mano con setDuttyCycle */
 void updateDuttyCycle(PWM_Handler_t *ptrPwmHandler, uint16_t newDutty){
 
 	//Actualizamos el registro que manipula el dutty
-	//Agregar código
+	ptrPwmHandler->config.duttyCicle = newDutty;
 
 	//Llamamos la función que cambia el Dutty y cargamos el nuevo valor
-	//Agregar código
+	setDuttyCycle(&*ptrPwmHandler);
 }
