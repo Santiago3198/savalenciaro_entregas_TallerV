@@ -264,7 +264,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 }
 
 /* Funcion para escribir un solo char */
-int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend){
+int writeChar(USART_Handler_t *ptrUsartHandler, char dataToSend){
 	while( !(ptrUsartHandler->ptrUSARTx->SR & USART_SR_TXE)){
 		__NOP();
 	}

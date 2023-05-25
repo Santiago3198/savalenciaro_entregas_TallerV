@@ -56,8 +56,8 @@ int main(void){
 	//Configuración del TIM2 (Blinky)
 	handlerTimerBlinky.ptrTIMx = TIM2;
 	handlerTimerBlinky.TIMx_Config.TIMx_mode = BTIMER_MODE_UP;
-	handlerTimerBlinky.TIMx_Config.TIMx_speed = BTIMER_SPEED_100us;		//Corregir velocidad según la nueva frecuencia
-	handlerTimerBlinky.TIMx_Config.TIMx_period = 2500;					//Corregir  periodo según la nueva frecuencia
+	handlerTimerBlinky.TIMx_Config.TIMx_speed = BTIMER_SPEED_PLL_80_MHz_100us;
+	handlerTimerBlinky.TIMx_Config.TIMx_period = 2500;
 	handlerTimerBlinky.TIMx_Config.TIMx_interruptEnable = 1;
 	BasicTimer_Config(&handlerTimerBlinky);
 

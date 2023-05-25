@@ -79,7 +79,7 @@ typedef struct
 
 /* Definicion de los prototipos para las funciones del USART */
 void USART_Config(USART_Handler_t *ptrUsartHandler);
-int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend );
+int writeChar(USART_Handler_t *ptrUsartHandler, char dataToSend );
 
 uint8_t readChar(USART_Handler_t *ptrUsartHandler);
 

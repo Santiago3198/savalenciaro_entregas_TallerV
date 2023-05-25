@@ -11,6 +11,7 @@
 uint16_t freqPLL = 0;
 
 void configPLL(void){
+
 	//Seleccionamos el reloj que alimenta el PLL
 	RCC->PLLCFGR &= RCC_PLLCFGR_PLLSRC_HSI;
 
