@@ -15,6 +15,11 @@
  */
 
 uint8_t auxRxData;
+uint8_t auxFun = 0;
+char dataTxSend = 0;
+char dataToSend = 0;
+char msgTxSend = 0;
+
 
 void USART_Config(USART_Handler_t *ptrUsartHandler){
 	/* 1. Activamos la señal de reloj que viene desde el BUS al que pertenece el periferico */
@@ -114,15 +119,31 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		// Mantiza = 104 = 0x68, fraction = 16 * 0.1875 = 3
 		// Valor a cargar 0x0683
 		// Configurando el Baudrate generator para una velocidad de 9600bps
-		ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
+
+		//Descomentar esta línea si el dispositivo está configurado a 16MHz
+		//ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
+
+		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
+		/* Valor a cargar = 530.833
+		 * Mantiza = 530 = 212, fracción = 13 = D
+		 */
+		ptrUsartHandler->ptrUSARTx->BRR = 0x212D;
+
 	}
 
 	else if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_19200) {
 		// El valor a cargar es 52.0625 -> Mantiza = 52,fraction = 0.0625
-		// Mantiza = 52 = 0x34, fraction = 16 * 0.1875 = 1
+		// Mantiza = 52 = 0x34, fraction = 16 * 0.0625 = 1
 		// Valor a cargar 0x0341
 		// Configurando el Baudrate generator para una velocidad de 19200bps
-		ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
+
+		//Descomentar esta línea si el dispositivo está configurado a 16MHz
+		//ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
+
+		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
+		//Valor a cargar = 260.417
+		//Mantiza = 260 = 104, fracción = 6
+		ptrUsartHandler->ptrUSARTx->BRR = 0x1046;
 	}
 
 	else if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_115200){
@@ -130,7 +151,16 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		// Mantiza = 8 = 0x08, fraction = 16 * 0.6875 = 11 = B
 		// Valor a cargar 0x08B
 		// Configurando el Baudrate generator para una velocidad de 115200bps
-		ptrUsartHandler->ptrUSARTx->BRR = 0x008B;
+
+		//Descomentar esta línea si el dispositivo está configurado a 16MHz
+		//ptrUsartHandler->ptrUSARTx->BRR = 0x008B;
+
+		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
+		//Valor a cargar = 43.402
+		//Mantiza = 43 = 2B, fraccion = 6
+		ptrUsartHandler->ptrUSARTx->BRR = 0x02B6;
+
+
 	}
 
 	// 2.6 Configuramos el modo: TX only, RX only, RXTX, disable
@@ -196,7 +226,16 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 
 	//3.3 Activar las interrupciones por transmision
 	if(ptrUsartHandler->USART_Config.USART_enableIntTX == USART_TX_INTERRUP_ENABLE ){
-			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TXEIE;
+			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TXEIE;
+			if(ptrUsartHandler->ptrUSARTx == USART1){
+				__NVIC_EnableIRQ(USART1_IRQn);
+			}
+			else if(ptrUsartHandler->ptrUSARTx == USART2){
+				__NVIC_EnableIRQ(USART2_IRQn);
+			}
+			else if(ptrUsartHandler->ptrUSARTx == USART6){
+				__NVIC_EnableIRQ(USART6_IRQn);
+			}
 
 		}else if(ptrUsartHandler->USART_Config.USART_enableIntTX == USART_TX_INTERRUP_DISABLE){
 			ptrUsartHandler->ptrUSARTx->CR1 &= ~USART_CR1_TXEIE;
@@ -232,6 +271,7 @@ int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend){
 
 	ptrUsartHandler->ptrUSARTx->DR = dataToSend;
 
+	auxFun = 0;
 	return dataToSend;
 }
 
@@ -261,11 +301,34 @@ uint8_t getRxData(void){
 	return auxRxData;
 }
 
+int writeCharTX(USART_Handler_t *ptrUsartHandler, int dataToSend){
+
+	//Activar la transmisión por interrupción
+	ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TXEIE;
+
+	//Se carga la variable en la nueva variable global
+	dataTxSend = dataToSend;
+
+	auxFun = 1;
+	return dataTxSend;
+}
+
+void writeMsgTX(USART_Handler_t *ptrUsartHandler, char *mgsTxSend){
+
+}
+
 void USART1_IRQHandler(void){
 	//Evaluamos si la interrupcion que se dio es por RX
 	if(USART1->SR & USART_SR_RXNE){
 		auxRxData = (uint8_t) USART1->DR;
 		usart1Rx_Callback();
+	}
+	//Evaluamos si la interrupción que se dió es por TX
+	else if(USART1->SR & USART_SR_TXE){
+		//Guardamos el mensaje a transmitir en DR
+		USART1->DR = dataTxSend;
+		//Bajar la bandera de transmisión
+		USART1->CR1 &= USART_CR1_TXEIE;
 	}
 }
 

@@ -16,8 +16,9 @@
 #define BTIMER_SPEED_10us			160
 #define BTIMER_SPEED_100us			1600
 #define BTIMER_SPEED_16000us		16000
+#define BTIMER_SPEED_80000us		80000
 
-/*Estructura que contiene la configutacion minima necesaria para el manejo del timer*/
+/*Estructura que contiene la configuracion minima necesaria para el manejo del timer*/
 
 typedef struct
 {

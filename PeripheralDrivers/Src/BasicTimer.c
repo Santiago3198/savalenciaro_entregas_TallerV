@@ -26,10 +26,10 @@ TIM_TypeDef 	*ptrTIM5 = TIM5;
  * 		-TIMx_DIER (DMA and Interrupt enable register)
  * 		-TIMx_SR (status register)
  * 		-TIMx_CNT (counter)
- * 		-TIMx_PSVC (pre scaler)
+ * 		-TIMx_PSC (pre scaler)
  * 		-TIMx_ARR (AutoReload register)
  *
- *Como vamos a trabajar con interrupciones, antes de configurar una nueva, debemo descativar
+ *Como vamos a trabajar con interrupciones, antes de configurar una nueva, debemos desactivar
  *el sistema global de interrupciones, activar la IRQ especifica y luego volver a encender
  *el sistema
  */
@@ -60,10 +60,12 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	}
 	else if(ptrBTimerHandler->ptrTIMx == TIM4){
 
+		//Registro del RCC que nos activa la señal de reloj para el TIM4
 		RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
 	}
 	else if(ptrBTimerHandler->ptrTIMx == TIM5){
 
+		//Registro del RCC que nos activa la señal de reloj para el TIM5
 		RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
 	}
 	else{
@@ -77,7 +79,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	 * Modificar el valor del registro PSC en el TIM utilizado
 	 */
 
-	ptrBTimerHandler->ptrTIMx->PSC = ptrBTimerHandler->TIMx_Config.TIMx_speed;  //Preguntar
+	ptrBTimerHandler->ptrTIMx->PSC = ptrBTimerHandler->TIMx_Config.TIMx_speed;
 
 	/*3.Configuramos la direccion del counter (up/down)*/
 

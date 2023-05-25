@@ -34,6 +34,11 @@ void config_SysTick_ms(uint8_t systemClock){
 		SysTick->LOAD = SYSTICK_LOAD_VALUE_100MHz_1ms;
 		break;
 
+	//Caso para el reloj PLL a 80 MHz
+	case 3:
+		SysTick->LOAD = SYSTICK_LOAD_VALUE_80MHz_1ms;
+		break;
+
 	//Caso en el que se ingresa un valor diferente
 	default:
 		SysTick->LOAD = SYSTICK_LOAD_VALUE_16MHz_1ms;
