@@ -19,7 +19,8 @@ void configPLL(void){
 	RCC->CR &= ~RCC_CR_PLLON;
 
 	//Seleccionamos el reloj que alimenta el PLL
-	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;
+	RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLSRC);
+	RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC;
 
 	//Configuramos los preescaler para que los buses funcionen con la nueva velocidad del dispositivo
 	//APB1
@@ -28,6 +29,9 @@ void configPLL(void){
 
 	//APB2
 	RCC->CFGR &= ~RCC_CFGR_PPRE2;
+
+	//Se limpia el registro
+	RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLM);
 
 	//Configuración del bit PLLM
 	RCC->PLLCFGR |= (10 << 0);
@@ -39,10 +43,17 @@ void configPLL(void){
 	RCC->PLLCFGR |= (2 << 16);
 
 	//Configuración de la memoria flash
+	//Limpiamos el registro
 	FLASH->ACR &= ~(FLASH_ACR_LATENCY);
 
 	//Se configura la latencia para 80 MHz
 	FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
+
+	//Se limpia los bits MCO1
+	RCC->CFGR &= ~(RCC_CFGR_MCO1);
+
+	//Seleccionar el PLL
+	RCC->CFGR |= RCC_CFGR_MCO1;
 
 	//Encender el PLL
 	RCC->CR |= RCC_CR_PLLON;

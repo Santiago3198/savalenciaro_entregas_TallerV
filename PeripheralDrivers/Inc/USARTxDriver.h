@@ -7,6 +7,7 @@
 
 
 #include <stdio.h>
+#include <string.h>
 
 #ifndef USARTXDRIVER_H_
 #define USARTXDRIVER_H_

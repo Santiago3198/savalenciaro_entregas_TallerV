@@ -19,9 +19,12 @@ uint8_t auxFun = 0;
 char dataTxSend = 0;
 char dataToSend = 0;
 char msgTxSend = 0;
+char auxArreglo[100];
+volatile uint16_t tx_index = 0;
+volatile uint16_t tx_length = 0;
 
 
-void USART_Config(USART_Handler_t *ptrUsartHandler){
+ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	/* 1. Activamos la señal de reloj que viene desde el BUS al que pertenece el periferico */
 	/* Lo debemos hacer para cada uno de las pisbles opciones que tengamos (USART1, USART2, USART6) */
 
@@ -301,6 +304,7 @@ uint8_t getRxData(void){
 	return auxRxData;
 }
 
+//Función para enviar un Char por transmisión
 int writeCharTX(USART_Handler_t *ptrUsartHandler, int dataToSend){
 
 	//Activar la transmisión por interrupción
@@ -309,12 +313,20 @@ int writeCharTX(USART_Handler_t *ptrUsartHandler, int dataToSend){
 	//Se carga la variable en la nueva variable global
 	dataTxSend = dataToSend;
 
-	auxFun = 1;
-	return dataTxSend;
+	auxFun = 0;
+	return dataToSend;
 }
 
-void writeMsgTX(USART_Handler_t *ptrUsartHandler, char *mgsTxSend){
+void writeMsgTX(USART_Handler_t *ptrUsartHandler, char *msgToSend){
+	//Valor de la variable global
+	strncpy(auxArreglo, msgToSend, 100);
+	tx_length = strlen(msgToSend);
+	tx_index = 0;
 
+	//Activar las interrupciones por transmisión
+	ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TXEIE;
+
+	auxFun = 1;
 }
 
 void USART1_IRQHandler(void){
@@ -325,10 +337,31 @@ void USART1_IRQHandler(void){
 	}
 	//Evaluamos si la interrupción que se dió es por TX
 	else if(USART1->SR & USART_SR_TXE){
-		//Guardamos el mensaje a transmitir en DR
-		USART1->DR = dataTxSend;
-		//Bajar la bandera de transmisión
-		USART1->CR1 &= USART_CR1_TXEIE;
+
+		//Usando la función writeCharTx
+		if(auxFun == 0){
+			//Guardar en el DR
+			USART1->DR = dataTxSend;
+			//Bajar la bandera de la interrupción
+			USART1->CR1 &= ~(USART_CR1_TXEIE);
+		}
+		//Usando la función writeMsg
+		else if(auxFun == 1){
+			if (auxArreglo[tx_index] != '\0'){
+				if(tx_index < tx_length){
+					USART1->DR = auxArreglo[tx_index];
+					while(!(USART1->SR & USART_SR_TC)){
+						__NOP();
+					}
+					tx_index++;
+				}
+			}
+			else if(auxArreglo[tx_index] == '\0'){
+
+				//Bajar la bandera de la interrupción
+				USART1->CR1 &= ~(USART_CR1_TXEIE);
+			}
+		}
 	}
 }
 

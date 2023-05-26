@@ -47,6 +47,8 @@ PWM_Handler_t handlerSignalPWM		= {0};
 
 uint16_t duttyValue = 1500;
 
+char bufferMsg[64] = {0};
+
 void initSystem(void);
 
 int main(void){
@@ -57,11 +59,9 @@ int main(void){
 	/*Loop forever*/
 	while(1){
 
-		char bufferMsg[64] = {0};
-
 		//Verificando el PWM
 		if(usart2DataReceived != '\0'){
-			if(usart2DataReceived == 'D'){
+			if(usart2DataReceived == 'd'){
 
 				//Down
 				duttyValue -= 10;
@@ -69,7 +69,7 @@ int main(void){
 			}
 
 			//Para probar el seno
-			if(usart2DataReceived == 'U'){
+			if(usart2DataReceived == 'u'){
 
 				//Up
 				duttyValue += 10;
