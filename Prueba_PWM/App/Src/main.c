@@ -47,8 +47,6 @@ PWM_Handler_t handlerSignalPWM		= {0};
 
 uint16_t duttyValue = 1500;
 
-char bufferMsg[64] = {0};
-
 void initSystem(void);
 
 int main(void){
@@ -58,6 +56,8 @@ int main(void){
 
 	/*Loop forever*/
 	while(1){
+
+		char bufferMsg[64] = {0};
 
 		//Verificando el PWM
 		if(usart2DataReceived != '\0'){
@@ -157,11 +157,11 @@ void initSystem(void){
 	GPIO_Config(&handlerPinPwmChannel);
 
 	//Configuraciòn del timer para que genere la señal PWM
-	handlerSignalPWM.ptrTIMx		= TIM3;
-	handlerSignalPWM.config.channel	= PWM_CHANNEL_2;
-	handlerSignalPWM.config.duttyCicle	= duttyValue;
-	handlerSignalPWM.config.periodo		= 20000;
-	handlerSignalPWM.config.prescaler	= 16;
+	handlerSignalPWM.ptrTIMx					= TIM3;
+	handlerSignalPWM.config.channel				= PWM_CHANNEL_2;
+	handlerSignalPWM.config.duttyCicle			= duttyValue;
+	handlerSignalPWM.config.periodo				= 20000;
+	handlerSignalPWM.config.prescaler			= 16;
 	pwm_Config(&handlerSignalPWM);
 
 	//Activamos la señal

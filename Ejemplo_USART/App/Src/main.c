@@ -68,13 +68,6 @@ int main(void){
 			sendMsg = 0;
 		 */
 
-//		if(sendMsg > 4){
-//
-//			sprintf(dataMsg, "El valor de Pi es = %f \n", M_PI);
-//			//writeMsg(&usart2Comm, dataMsg);
-//
-//			sendMsg = 0;
-//		}
 
 		if(usart2DataReceived != '\0'){
 			//Echo para enviar de vuelta el mensaje recibido

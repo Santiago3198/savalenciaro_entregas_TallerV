@@ -121,13 +121,13 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		// Configurando el Baudrate generator para una velocidad de 9600bps
 
 		//Descomentar esta línea si el dispositivo está configurado a 16MHz
-		//ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
+		ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
 
 		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
 		/* Valor a cargar = 530.833
 		 * Mantiza = 530 = 212, fracción = 13 = D
 		 */
-		ptrUsartHandler->ptrUSARTx->BRR = 0x212D;
+		//ptrUsartHandler->ptrUSARTx->BRR = 0x212D;
 
 	}
 
@@ -138,12 +138,12 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		// Configurando el Baudrate generator para una velocidad de 19200bps
 
 		//Descomentar esta línea si el dispositivo está configurado a 16MHz
-		//ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
+		ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
 
 		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
 		//Valor a cargar = 260.417
 		//Mantiza = 260 = 104, fracción = 6
-		ptrUsartHandler->ptrUSARTx->BRR = 0x1046;
+		//ptrUsartHandler->ptrUSARTx->BRR = 0x1046;
 	}
 
 	else if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_115200){
@@ -153,12 +153,12 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		// Configurando el Baudrate generator para una velocidad de 115200bps
 
 		//Descomentar esta línea si el dispositivo está configurado a 16MHz
-		//ptrUsartHandler->ptrUSARTx->BRR = 0x008B;
+		ptrUsartHandler->ptrUSARTx->BRR = 0x008B;
 
 		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
 		//Valor a cargar = 43.402
 		//Mantiza = 43 = 2B, fraccion = 6
-		ptrUsartHandler->ptrUSARTx->BRR = 0x02B6;
+		//ptrUsartHandler->ptrUSARTx->BRR = 0x02B6;
 
 
 	}
