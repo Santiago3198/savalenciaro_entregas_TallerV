@@ -192,8 +192,8 @@ void initSystem(void){
 	handlerI2cSDA.pGPIOx									= GPIOB;
 	handlerI2cSDA.GPIO_PinConfig.GPIO_PinNumber				= PIN_9;
 	handlerI2cSDA.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerI2cSDA.GPIO_PinConfig.GPIO_PinOPType				= GPIO_OTYPE_PUSHPULL;
-	handlerI2cSDA.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+	handlerI2cSDA.GPIO_PinConfig.GPIO_PinOPType				= GPIO_OTYPE_OPENDRAIN;
+	handlerI2cSDA.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_NOTHING;
 	handlerI2cSDA.GPIO_PinConfig.GPIO_PinSpeed				= GPIO_OSPEEDR_FAST;
 	handlerI2cSDA.GPIO_PinConfig.GPIO_PinAltFunMode			= AF4;
 	GPIO_Config(&handlerI2cSDA);
@@ -202,8 +202,8 @@ void initSystem(void){
 	handlerI2cSCL.pGPIOx									= GPIOB;
 	handlerI2cSCL.GPIO_PinConfig.GPIO_PinNumber				= PIN_8;
 	handlerI2cSCL.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerI2cSCL.GPIO_PinConfig.GPIO_PinOPType				= GPIO_OTYPE_PUSHPULL;
-	handlerI2cSCL.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+	handlerI2cSCL.GPIO_PinConfig.GPIO_PinOPType				= GPIO_OTYPE_OPENDRAIN;
+	handlerI2cSCL.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_NOTHING;
 	handlerI2cSCL.GPIO_PinConfig.GPIO_PinSpeed				= GPIO_OSPEEDR_FAST;
 	handlerI2cSCL.GPIO_PinConfig.GPIO_PinAltFunMode			= AF4;
 	GPIO_Config(&handlerI2cSCL);

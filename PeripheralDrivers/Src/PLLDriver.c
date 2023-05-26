@@ -12,8 +12,14 @@ uint16_t freqPLL = 0;
 
 void configPLL(void){
 
+	//Se habilita el reloj interno HSI
+	RCC->CR |= RCC_CR_HSION;
+
+	//Aseguramos que el PLL està apagado
+	RCC->CR &= ~RCC_CR_PLLON;
+
 	//Seleccionamos el reloj que alimenta el PLL
-	RCC->PLLCFGR &= RCC_PLLCFGR_PLLSRC_HSI;
+	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;
 
 	//Configuramos los preescaler para que los buses funcionen con la nueva velocidad del dispositivo
 	//APB1
@@ -22,14 +28,6 @@ void configPLL(void){
 
 	//APB2
 	RCC->CFGR &= ~RCC_CFGR_PPRE2;
-
-	//Seleccionamos el PLL como reloj del sistema
-	RCC->CFGR &= ~(RCC_CFGR_SW);
-	RCC->CFGR |= (RCC_CFGR_SW);
-
-	//Seleccionamos el PLL como reloj principal
-	RCC->CFGR &= ~(RCC_CFGR_MCO1);
-	RCC->CFGR |= (RCC_CFGR_MCO1);
 
 	//Configuración del bit PLLM
 	RCC->PLLCFGR |= (10 << 0);
@@ -41,7 +39,10 @@ void configPLL(void){
 	RCC->PLLCFGR |= (2 << 16);
 
 	//Configuración de la memoria flash
-	FLASH->ACR |= ~(FLASH_ACR_LATENCY_Msk);
+	FLASH->ACR &= ~(FLASH_ACR_LATENCY);
+
+	//Se configura la latencia para 80 MHz
+	FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
 
 	//Encender el PLL
 	RCC->CR |= RCC_CR_PLLON;
@@ -50,6 +51,10 @@ void configPLL(void){
 	while(!(RCC->CR & RCC_CR_PLLRDY)){
 		__NOP();
 	}
+
+	//Seleccionamos el PLL como reloj del sistema
+	RCC->CFGR &= ~RCC_CFGR_SW_0;
+	RCC->CFGR |= RCC_CFGR_SW_1;
 
 	//Activar el PLL para todo el dispositivo
 	RCC->CFGR |= RCC_CFGR_SW_PLL;
