@@ -20,7 +20,7 @@
 #include "BasicTimer.h"
 #include "ExtiDriver.h"
 #include "USARTxDriver.h"
-#include "I2CDriver.h"
+#include "I2CxDriver.h"
 #include "PWMDriver.h"
 #include "PLLDriver.h"
 #include "SysTickDriver.h"

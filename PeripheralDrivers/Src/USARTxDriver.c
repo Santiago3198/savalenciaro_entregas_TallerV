@@ -19,9 +19,9 @@ uint8_t auxFun = 0;
 char dataTxSend = 0;
 char dataToSend = 0;
 char msgTxSend = 0;
-char auxArreglo[100];
-volatile uint16_t tx_index = 0;
-volatile uint16_t tx_length = 0;
+char auxArray[100];
+volatile uint16_t counterTx = 0;
+volatile uint16_t dataTx = 0;
 
 
  void USART_Config(USART_Handler_t *ptrUsartHandler){
@@ -118,52 +118,67 @@ volatile uint16_t tx_length = 0;
 	// 2.5 Configuracion del Baudrate (SFR USART_BRR)
 	// Ver tabla de valores (Tabla 73), Frec = 16MHz, overr = 0;
 	if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_9600){
-		// El valor a cargar es 104.1875 -> Mantiza = 104,fraction = 0.1875
-		// Mantiza = 104 = 0x68, fraction = 16 * 0.1875 = 3
-		// Valor a cargar 0x0683
-		// Configurando el Baudrate generator para una velocidad de 9600bps
+		if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_DISABLE){
 
-		//Descomentar esta línea si el dispositivo está configurado a 16MHz
-		ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
+			// El valor a cargar es 104.1875 -> Mantiza = 104,fraction = 0.1875
+			// Mantiza = 104 = 0x68, fraction = 16 * 0.1875 = 3
+			// Valor a cargar 0x0683
+			// Configurando el Baudrate generator para una velocidad de 9600bps
 
-		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
-		/* Valor a cargar = 530.833
-		 * Mantiza = 530 = 212, fracción = 13 = D
-		 */
-		//ptrUsartHandler->ptrUSARTx->BRR = 0x212D;
+			ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
 
+		}else if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_ENABLE){
+
+			//Se configura el baudrate cuando el PLL está activado a 80MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x208D;
+
+		}else{
+			//Se configura el baudrate por defecto a 16MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
+		}
 	}
 
 	else if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_19200) {
-		// El valor a cargar es 52.0625 -> Mantiza = 52,fraction = 0.0625
-		// Mantiza = 52 = 0x34, fraction = 16 * 0.0625 = 1
-		// Valor a cargar 0x0341
-		// Configurando el Baudrate generator para una velocidad de 19200bps
+		if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_DISABLE){
 
-		//Descomentar esta línea si el dispositivo está configurado a 16MHz
-		ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
+			// El valor a cargar es 52.0625 -> Mantiza = 52,fraction = 0.0625
+			// Mantiza = 52 = 0x34, fraction = 16 * 0.0625 = 1
+			// Valor a cargar 0x0341
+			// Configurando el Baudrate generator para una velocidad de 19200bps
 
-		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
-		//Valor a cargar = 260.417
-		//Mantiza = 260 = 104, fracción = 6
-		//ptrUsartHandler->ptrUSARTx->BRR = 0x1046;
+			ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
+
+		}else if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_ENABLE){
+
+			//Se configura el baudrate cuando el PLL está activado a 80MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x1046;
+
+		}else{
+			//Se configura el baudrate por defecto a 16MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
+		}
 	}
 
 	else if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_115200){
-		// El valor a cargar es 8.6875 -> Mantiza = 8, fraction = 0.6875
-		// Mantiza = 8 = 0x08, fraction = 16 * 0.6875 = 11 = B
-		// Valor a cargar 0x08B
-		// Configurando el Baudrate generator para una velocidad de 115200bps
+		if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_DISABLE){
 
-		//Descomentar esta línea si el dispositivo está configurado a 16MHz
-		ptrUsartHandler->ptrUSARTx->BRR = 0x008B;
+			// El valor a cargar es 8.6875 -> Mantiza = 8, fraction = 0.6875
+			// Mantiza = 8 = 0x08, fraction = 16 * 0.6875 = 11 = B
+			// Valor a cargar 0x08B
+			// Configurando el Baudrate generator para una velocidad de 115200bps
 
-		//Descomentar esta línea si el dispositivo está configurado con PLL a 80MHz
-		//Valor a cargar = 43.402
-		//Mantiza = 43 = 2B, fraccion = 6
-		//ptrUsartHandler->ptrUSARTx->BRR = 0x02B6;
+			ptrUsartHandler->ptrUSARTx->BRR = 0x008B;
 
+		}else if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_ENABLE){
 
+			//Se configura el baudrate cuando el PLL está activado a 80MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x02B6;
+
+		}else{
+
+			//Se configura el baudrate por defecto a 16MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x008B;
+		}
 	}
 
 	// 2.6 Configuramos el modo: TX only, RX only, RXTX, disable
@@ -318,10 +333,11 @@ int writeCharTX(USART_Handler_t *ptrUsartHandler, int dataToSend){
 }
 
 void writeMsgTX(USART_Handler_t *ptrUsartHandler, char *msgToSend){
+
 	//Valor de la variable global
-	strncpy(auxArreglo, msgToSend, 100);
-	tx_length = strlen(msgToSend);
-	tx_index = 0;
+	strncpy(auxArray, msgToSend, 100);
+	dataTx = strlen(msgToSend);
+	counterTx = 0;
 
 	//Activar las interrupciones por transmisión
 	ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TXEIE;
@@ -347,16 +363,16 @@ void USART1_IRQHandler(void){
 		}
 		//Usando la función writeMsg
 		else if(auxFun == 1){
-			if (auxArreglo[tx_index] != '\0'){
-				if(tx_index < tx_length){
-					USART1->DR = auxArreglo[tx_index];
+			if (auxArray[counterTx] != '\0'){
+				if(counterTx < dataTx){
+					USART1->DR = auxArray[counterTx];
 					while(!(USART1->SR & USART_SR_TC)){
 						__NOP();
 					}
-					tx_index++;
+					counterTx++;
 				}
 			}
-			else if(auxArreglo[tx_index] == '\0'){
+			else if(auxArray[counterTx] == '\0'){
 
 				//Bajar la bandera de la interrupción
 				USART1->CR1 &= ~(USART_CR1_TXEIE);
@@ -371,6 +387,34 @@ void USART2_IRQHandler(void){
 		auxRxData = (uint8_t) USART2->DR;
 		usart2Rx_Callback();
 	}
+	//Evaluamos si la interrupción que se dió es por TX
+	else if(USART2->SR & USART_SR_TXE){
+
+		//Usando la función writeCharTx
+		if(auxFun == 0){
+			//Guardar en el DR
+			USART2->DR = dataTxSend;
+			//Bajar la bandera de la interrupción
+			USART2->CR1 &= ~(USART_CR1_TXEIE);
+		}
+		//Usando la función writeMsg
+		else if(auxFun == 1){
+			if (auxArray[counterTx] != '\0'){
+				if(counterTx < dataTx){
+					USART2->DR = auxArray[counterTx];
+					while(!(USART2->SR & USART_SR_TC)){
+						__NOP();
+					}
+					counterTx++;
+				}
+			}
+			else if(auxArray[counterTx] == '\0'){
+
+				//Bajar la bandera de la interrupción
+				USART2->CR1 &= ~(USART_CR1_TXEIE);
+			}
+		}
+	}
 }
 
 void USART6_IRQHandler(void){
@@ -378,6 +422,34 @@ void USART6_IRQHandler(void){
 	if(USART6->SR & USART_SR_RXNE){
 		auxRxData = (uint8_t) USART6->DR;
 		usart6Rx_Callback();
+	}
+	//Evaluamos si la interrupción que se dió es por TX
+	else if(USART6->SR & USART_SR_TXE){
+
+		//Usando la función writeCharTx
+		if(auxFun == 0){
+			//Guardar en el DR
+			USART6->DR = dataTxSend;
+			//Bajar la bandera de la interrupción
+			USART6->CR1 &= ~(USART_CR1_TXEIE);
+		}
+		//Usando la función writeMsg
+		else if(auxFun == 1){
+			if (auxArray[counterTx] != '\0'){
+				if(counterTx < dataTx){
+					USART6->DR = auxArray[counterTx];
+					while(!(USART6->SR & USART_SR_TC)){
+						__NOP();
+					}
+					counterTx++;
+				}
+			}
+			else if(auxArray[counterTx] == '\0'){
+
+				//Bajar la bandera de la interrupción
+				USART6->CR1 &= ~(USART_CR1_TXEIE);
+			}
+		}
 	}
 }
 

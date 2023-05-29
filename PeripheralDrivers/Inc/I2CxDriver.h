@@ -1,12 +1,12 @@
 /*
- * I2CDriver.h
+ * I2CxDriver.h
  *
- *  Created on: May 12, 2023
+ *  Created on: 27.5.2023
  *      Author: Sentry
  */
 
-#ifndef I2CDRIVER_H_
-#define I2CDRIVER_H_
+#ifndef I2CxDRIVER
+#define I2CxDRIVER
 
 #include <stm32f4xx.h>
 
@@ -40,7 +40,7 @@ typedef struct
 	uint8_t			slaveAddress;
 	uint8_t			modeI2C;
 	uint8_t			dataI2C;
-	uint8_t			PLL_EN;
+	uint8_t			PLL_ON;
 }I2C_Handler_t;
 
 /*Prototipos de las funciones publicas*/

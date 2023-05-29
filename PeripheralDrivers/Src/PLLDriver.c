@@ -1,127 +1,129 @@
 /*
  * PLLDriver.c
  *
- *  Created on: 23/05/2023
- *      Author: Sentry
+ *  Created on: 27.5.2023
+ *    Author: Sentry
  */
 
+#include "stm32f4xx.h"
 #include "PLLDriver.h"
 
-//Variable que guarda el valor de la configuración del PLL
-uint16_t freqPLL = 0;
+void configPLL (void){
 
-void configPLL(void){
+		//APB1 = max Freq 50MHz
+		//Se configura el prescaler para que divida por 2
+		RCC->CFGR &= ~RCC_CFGR_PPRE1;
+		RCC->CFGR |= RCC_CFGR_PPRE1_2;
 
-	//Se habilita el reloj interno HSI
-	RCC->CR |= RCC_CR_HSION;
+		//APB2 = max Freq 100MHz
+		//No es necesario configurar prescaler en el APB2
+		RCC->CFGR &= ~RCC_CFGR_PPRE2_0;
+		RCC->CFGR &= ~RCC_CFGR_PPRE2_1;
+		RCC->CFGR &= ~RCC_CFGR_PPRE2_2;
 
-	//Aseguramos que el PLL està apagado
-	RCC->CR &= ~RCC_CR_PLLON;
+		//Activar el HSI como alimentación del PLL
+		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;
+		RCC->PLLCFGR |= (RCC_PLLCFGR_PLLSRC_HSI);
 
-	//Seleccionamos el reloj que alimenta el PLL
-	RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLSRC);
-	RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC;
+		//Apagar el PLL
+		RCC->CR &= ~ RCC_CR_PLLON;
 
-	//Configuramos los preescaler para que los buses funcionen con la nueva velocidad del dispositivo
-	//APB1
-	RCC->CFGR &= ~RCC_CFGR_PPRE1;
-	RCC->CFGR |= RCC_CFGR_PPRE1_2;
+		//Limpiar los bit M del registro PLLCFGR
+		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_0;
+		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_1;
+		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_2;
+		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_3;
+		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_4;
+		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_5;
 
-	//APB2
-	RCC->CFGR &= ~RCC_CFGR_PPRE2;
+		//PLLM = 10
+		RCC->PLLCFGR |= (0b1010 << RCC_PLLCFGR_PLLM_Pos);
 
-	//Se limpia el registro
-	RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLM);
+		//Limpiar los bit N del registro PLLCFGR
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_0;
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_1;
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_2;
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_3;
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_4;
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_5;
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_6;
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_7;
+		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_8;
 
-	//Configuración del bit PLLM
-	RCC->PLLCFGR |= (10 << 0);
+		//PLLN = 100		//001100100
+		RCC->PLLCFGR |= (0b001100100 << RCC_PLLCFGR_PLLN_Pos);
 
-	//Configuración del bit PLLN
-	RCC->PLLCFGR |= (100 << 6);
+		//PLLP = 2
+		RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLP);
 
-	//Configuración del bit PLLP
-	RCC->PLLCFGR |= (2 << 16);
+		//Limpiamos el registro de la FLASH
+		FLASH->ACR &= ~(FLASH_ACR_LATENCY);
 
-	//Configuración de la memoria flash
-	//Limpiamos el registro
-	FLASH->ACR &= ~(FLASH_ACR_LATENCY);
+		//Configurar 2 WS para el reloj
+		FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
 
-	//Se configura la latencia para 80 MHz
-	FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
 
-	//Se limpia los bits MCO1
-	RCC->CFGR &= ~(RCC_CFGR_MCO1);
+		//Habilitar el PLL
+		RCC->CR |= RCC_CR_PLLON;
+		while (!(RCC->CR & (RCC_CR_PLLRDY)));
 
-	//Seleccionar el PLL
-	RCC->CFGR |= RCC_CFGR_MCO1;
-
-	//Encender el PLL
-	RCC->CR |= RCC_CR_PLLON;
-
-	//Se le da tiempo al equipo para que cargue la nueva configuración de la frecuencia asignada
-	while(!(RCC->CR & RCC_CR_PLLRDY)){
-		__NOP();
-	}
-
-	//Seleccionamos el PLL como reloj del sistema
-	RCC->CFGR &= ~RCC_CFGR_SW_0;
-	RCC->CFGR |= RCC_CFGR_SW_1;
-
-	//Activar el PLL para todo el dispositivo
-	RCC->CFGR |= RCC_CFGR_SW_PLL;
+		//PLL como reloj del sistema
+		RCC->CFGR &= ~RCC_CFGR_SW_0;
+		RCC->CFGR |= RCC_CFGR_SW_1;
 }
 
 uint16_t getConfigPLL(void){
+	//Variable auxiliar para guardar la configuracion del equipo
+	uint16_t auxVariable = 0;
+	//Variables para guardar los valores de PLLM, PLLN y PLLP
+	uint8_t auxPLLM = 0;
+	uint16_t auxPLLN = 0;
+	uint8_t auxPLLP = 0;
+	//Variable para guardar la frecuencia de entrada del PLL
+	uint8_t auxFreqIn = 0;
 
-	/* Variables donde se van a guardar en variables los valores que hay en los
-	 * bits PLLN, PLLM y PLLP, esto para poder manipularlos y operarlos entre ellos
-	 */
+	//le damos el valor a la frecuencia de entrada del PLL
+	auxFreqIn = 16;
 
-	uint16_t PLLN = 0;
-	uint16_t PLLM = 0;
-	uint8_t PLLP = 0;
-
-	//Variables donde se guardan los valores de frecuencia
-	uint8_t f_vco = 0;
-
+	//Guardo los valores del PLLM, PLLN y PLLP en sus respectivas varaibles
+	//PLLM
+	auxPLLM = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLM_Pos);
+	//Aplicamos la mascara para obtener solo el valor del registro PLLM
+	auxPLLM &= (RCC_PLLCFGR_PLLM);
 
 	//PLLN
-	//Se lleva el valor a la primera posición del registro y asignamos el valor del registro a la variable
-	PLLN = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLN_Pos);
-	PLLN &= RCC_PLLCFGR_PLLN;
-
-	//PLLM
-	//Se lleva el valor a la primera posición del registro y asignamos el valor del registro a la variable
-	PLLM = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLM_Pos);
-	PLLM &= RCC_PLLCFGR_PLLM;
+	auxPLLN = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLN_Pos);
+//	//Aplicamos la mascara para obtener solo el valor del registro PLLN
+//	auxPLLN &= (RCC_PLLCFGR_PLLN);
 
 	//PLLP
-	//Se lleva el valor a la primera posición del registro y asignamos el valor del registro a la variable
-	PLLP = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLP_Pos);
-	PLLP &= RCC_PLLCFGR_PLLP;
-
-	/* Dependiendo de los valores que se le asignen a los bits PLLP
-	 * entonces la variable solo puede tomar uno de los siguientes
-	 * 4 valores
-	 */
-
-	if(PLLP == 0b00){
-		PLLP = 2;
-	}else if(PLLP == 0b01){
-		PLLP = 4;
-	}else if(PLLP == 0b10){
-		PLLP = 6;
-	}else if(PLLP == 0b11){
-		PLLP = 8;
+	auxPLLP = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLP_Pos);
+	//Aplicamos la mascara para obtener solo el valor del registro PLLP
+	auxPLLP &= (RCC_PLLCFGR_PLLP);
+	//Hacemos un switch case para guardar el valor real del registro PLLP
+	switch(auxPLLP){
+	case 0:{
+		auxPLLP = 2;
+		break;
+	}
+	case 1:{
+		auxPLLP = 4;
+		break;
+	}
+	case 2:{
+		auxPLLP = 6;
+		break;
+	}
+	case 3:{
+		auxPLLP = 8;
+		break;
+	}
 	}
 
-	/* Se realizan las operaciones correspondientes y se guarda el valor de
-	 * la frecuencia en la variable "config" para posteriormente ser mostrada
-	 */
+	//Calculando para el VCO clock
+	auxVariable = auxFreqIn * (auxPLLN / (uint16_t) auxPLLM);
+	//Calculando PLL general clock output
+	auxVariable = auxVariable / auxPLLP;
 
-	f_vco = 16*(PLLN/PLLM);
-
-	freqPLL = f_vco/PLLP;
-
-	return freqPLL;
+	return auxVariable;
 }

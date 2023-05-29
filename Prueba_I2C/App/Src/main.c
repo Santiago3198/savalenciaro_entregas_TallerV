@@ -20,7 +20,7 @@
 #include "BasicTimer.h"
 #include "ExtiDriver.h"
 #include "USARTxDriver.h"
-#include "I2CDriver.h"
+#include "I2CxDriver.h"
 #include "PWMDriver.h"
 #include "PLLDriver.h"
 #include "SysTickDriver.h"
@@ -145,8 +145,8 @@ int main(void){
 void initSystem(void){
 
 	//Configuraciòn del Blinky
-	handlerLedOK.pGPIOx									= GPIOA;
-	handlerLedOK.GPIO_PinConfig.GPIO_PinNumber			= PIN_5;
+	handlerLedOK.pGPIOx									= GPIOC;
+	handlerLedOK.GPIO_PinConfig.GPIO_PinNumber			= PIN_0;
 	handlerLedOK.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
 	handlerLedOK.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
 	handlerLedOK.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEEDR_FAST;
