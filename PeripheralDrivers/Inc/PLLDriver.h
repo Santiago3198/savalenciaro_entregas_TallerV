@@ -5,8 +5,8 @@
  *      Author: Sentry
  */
 
-#ifndef PLLXDRIVER_H_
-#define PLLXDRIVER_H_
+#ifndef PLLDRIVER_H_
+#define PLLDRIVER_H_
 
 //Función que guarda la configuración del PLL
 void configPLL (void);

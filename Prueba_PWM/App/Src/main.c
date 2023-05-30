@@ -45,7 +45,7 @@ uint8_t usart2DataReceived = 0;
 GPIO_Handler_t handlerPinPwmChannel = {0};
 PWM_Handler_t handlerSignalPWM		= {0};
 
-uint16_t duttyValue = 1500;
+uint16_t duttyValue = 15000;
 
 char bufferMsg[64] = {0};
 

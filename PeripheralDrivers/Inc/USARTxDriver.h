@@ -92,6 +92,8 @@ void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend);
 
 int writeCharTX(USART_Handler_t *ptrUsartHandler, int dataToSend);
 
+void writeMsgTX(USART_Handler_t *ptrUsartHandler, char *msgToSend);
+
 uint8_t getRxData(void);
 
 void usart1Rx_Callback(void);

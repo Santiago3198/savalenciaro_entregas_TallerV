@@ -73,57 +73,56 @@ void configPLL (void){
 }
 
 uint16_t getConfigPLL(void){
-	//Variable auxiliar para guardar la configuracion del equipo
-	uint16_t auxVariable = 0;
-	//Variables para guardar los valores de PLLM, PLLN y PLLP
-	uint8_t auxPLLM = 0;
-	uint16_t auxPLLN = 0;
-	uint8_t auxPLLP = 0;
-	//Variable para guardar la frecuencia de entrada del PLL
-	uint8_t auxFreqIn = 0;
 
-	//le damos el valor a la frecuencia de entrada del PLL
-	auxFreqIn = 16;
+	//Definición de variables
+	uint16_t auxVar = 0;			//Variable que guarda la configuración del equipo
 
-	//Guardo los valores del PLLM, PLLN y PLLP en sus respectivas varaibles
+	uint8_t PLLM = 0;				//Se guarda el valor de PLLM
+	uint16_t PLLN = 0;				//Se guarda el valor de PLLN
+	uint8_t PLLP = 0;				//Se guarda el valor de PLLP
+
+	uint8_t auxFreqIn = 0;			//Variable para guardar la frecuencia de entrada del PLL
+
+	auxFreqIn = 16;					//Frecuencia de entrada al PLL
+
+	//Se guardan los valores de PLLM, PLLN y PLLP respectivamente
 	//PLLM
-	auxPLLM = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLM_Pos);
-	//Aplicamos la mascara para obtener solo el valor del registro PLLM
-	auxPLLM &= (RCC_PLLCFGR_PLLM);
+	PLLM = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLM_Pos);
+	PLLM &= (RCC_PLLCFGR_PLLM);
 
 	//PLLN
-	auxPLLN = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLN_Pos);
-//	//Aplicamos la mascara para obtener solo el valor del registro PLLN
-//	auxPLLN &= (RCC_PLLCFGR_PLLN);
+	PLLN = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLN_Pos);
+	PLLN &= (RCC_PLLCFGR_PLLN);
 
 	//PLLP
-	auxPLLP = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLP_Pos);
-	//Aplicamos la mascara para obtener solo el valor del registro PLLP
-	auxPLLP &= (RCC_PLLCFGR_PLLP);
-	//Hacemos un switch case para guardar el valor real del registro PLLP
-	switch(auxPLLP){
+	PLLP = (RCC->PLLCFGR >> RCC_PLLCFGR_PLLP_Pos);
+	PLLP &= (RCC_PLLCFGR_PLLP);
+
+	//Se guarda el valor de PLLP dependiendo de la configuración
+	switch(PLLP){
 	case 0:{
-		auxPLLP = 2;
+		PLLP = 2;
 		break;
 	}
 	case 1:{
-		auxPLLP = 4;
+		PLLP = 4;
 		break;
 	}
 	case 2:{
-		auxPLLP = 6;
+		PLLP = 6;
 		break;
 	}
 	case 3:{
-		auxPLLP = 8;
+		PLLP = 8;
 		break;
 	}
-	}
+}
 
-	//Calculando para el VCO clock
-	auxVariable = auxFreqIn * (auxPLLN / (uint16_t) auxPLLM);
-	//Calculando PLL general clock output
-	auxVariable = auxVariable / auxPLLP;
+	//VCO clock
+	auxVar = auxFreqIn * (PLLN / (uint16_t) PLLM);
 
-	return auxVariable;
+	//PLL general clock output
+	auxVar = auxVar / PLLP;
+
+	return auxVar;
 }
