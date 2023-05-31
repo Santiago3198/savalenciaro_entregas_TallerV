@@ -136,7 +136,9 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 		//Activando el NVIC para la interrupcion del TIM2
 
+
 		NVIC_EnableIRQ(TIM2_IRQn);
+		__NVIC_SetPriority(TIM2_IRQn, 3);
 	}
 	else if (ptrBTimerHandler->ptrTIMx == TIM3){
 
@@ -155,6 +157,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 			// Activando en NVIC para la interrupción del TIM3
 
 		NVIC_EnableIRQ(TIM5_IRQn);
+		__NVIC_SetPriority(TIM5_IRQn, 5);
 	}
 	else{
 		__NOP();

@@ -1,19 +1,17 @@
 /*
  * PLLDriver.h
  *
- *  Created on: 23/05/2023
+ *  Created on: 27.5.2023
  *      Author: Sentry
  */
 
 #ifndef PLLDRIVER_H_
 #define PLLDRIVER_H_
 
-#include "stm32f4xx.h"
+//Función que guarda la configuración del PLL
+void configPLL (void);
 
-//Función para configurar el PLL a 80MHz
-void configPLL(void);
-
-//Función que entrega la configuración actual del PLL
+//Función para mostrar la configuración del PLL
 uint16_t getConfigPLL(void);
 
-#endif /* PLLDRIVER_H_ */
+#endif /* PLLDRIVER */

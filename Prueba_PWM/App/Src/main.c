@@ -20,7 +20,7 @@
 #include "BasicTimer.h"
 #include "ExtiDriver.h"
 #include "USARTxDriver.h"
-#include "I2CDriver.h"
+#include "I2CxDriver.h"
 #include "PWMDriver.h"
 #include "PLLDriver.h"
 #include "SysTickDriver.h"
@@ -45,7 +45,7 @@ uint8_t usart2DataReceived = 0;
 GPIO_Handler_t handlerPinPwmChannel = {0};
 PWM_Handler_t handlerSignalPWM		= {0};
 
-uint16_t duttyValue = 1500;
+uint16_t duttyValue = 15000;
 
 char bufferMsg[64] = {0};
 
@@ -61,7 +61,7 @@ int main(void){
 
 		//Verificando el PWM
 		if(usart2DataReceived != '\0'){
-			if(usart2DataReceived == 'D'){
+			if(usart2DataReceived == 'd'){
 
 				//Down
 				duttyValue -= 10;
@@ -69,7 +69,7 @@ int main(void){
 			}
 
 			//Para probar el seno
-			if(usart2DataReceived == 'U'){
+			if(usart2DataReceived == 'u'){
 
 				//Up
 				duttyValue += 10;
@@ -157,11 +157,11 @@ void initSystem(void){
 	GPIO_Config(&handlerPinPwmChannel);
 
 	//Configuraciòn del timer para que genere la señal PWM
-	handlerSignalPWM.ptrTIMx		= TIM3;
-	handlerSignalPWM.config.channel	= PWM_CHANNEL_2;
-	handlerSignalPWM.config.duttyCicle	= duttyValue;
-	handlerSignalPWM.config.periodo		= 20000;
-	handlerSignalPWM.config.prescaler	= 16;
+	handlerSignalPWM.ptrTIMx					= TIM3;
+	handlerSignalPWM.config.channel				= PWM_CHANNEL_2;
+	handlerSignalPWM.config.duttyCicle			= duttyValue;
+	handlerSignalPWM.config.periodo				= 20000;
+	handlerSignalPWM.config.prescaler			= 16;
 	pwm_Config(&handlerSignalPWM);
 
 	//Activamos la señal

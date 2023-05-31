@@ -34,7 +34,7 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 	setDuttyCycle(ptrPwmHandler);
 
 	/*2a. Estamos en UP mode, el límite se carga al ARR y se comienza en 0 */
-	ptrPwmHandler->ptrTIMx->ARR &= ~TIM_CR1_DIR;
+	ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_DIR;
 
 	/*3. Configuramos los bits CCxS del registro TIMy_CCMR1,
 	 *de forma que sea modo salida.

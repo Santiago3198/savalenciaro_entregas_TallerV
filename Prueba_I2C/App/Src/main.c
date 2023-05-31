@@ -20,7 +20,7 @@
 #include "BasicTimer.h"
 #include "ExtiDriver.h"
 #include "USARTxDriver.h"
-#include "I2CDriver.h"
+#include "I2CxDriver.h"
 #include "PWMDriver.h"
 #include "PLLDriver.h"
 #include "SysTickDriver.h"
@@ -107,11 +107,15 @@ int main(void){
 				uint8_t AccelX_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_L);
 				uint8_t AccelX_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_H);
 				int16_t AccelX = AccelX_high << 8 | AccelX_low;
+
 				sprintf(bufferData, "AccelX = %d \n", (int) AccelX);
 				writeMsg(&handlerCommTerminal, bufferData);
 				rxData = '\0';
 			}
 			else if(rxData == 'y'){
+				sprintf(bufferData, "Axis Y data (r)\n");
+				writeMsg(&handlerCommTerminal, bufferData);
+
 				uint8_t AccelY_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_L);
 				uint8_t AccelY_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_H);
 				int16_t AccelY = AccelY_high << 8 | AccelY_low;
@@ -120,6 +124,9 @@ int main(void){
 				rxData = '\0';
 			}
 			else if(rxData == 'z'){
+				sprintf(bufferData, "Axis Z data (r)\n");
+				writeMsg(&handlerCommTerminal, bufferData);
+
 				uint8_t AccelZ_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_L);
 				uint8_t AccelZ_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_H);
 				int16_t AccelZ = AccelZ_high << 8 | AccelZ_low;
@@ -138,8 +145,8 @@ int main(void){
 void initSystem(void){
 
 	//Configuraciòn del Blinky
-	handlerLedOK.pGPIOx									= GPIOA;
-	handlerLedOK.GPIO_PinConfig.GPIO_PinNumber			= PIN_5;
+	handlerLedOK.pGPIOx									= GPIOC;
+	handlerLedOK.GPIO_PinConfig.GPIO_PinNumber			= PIN_0;
 	handlerLedOK.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
 	handlerLedOK.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
 	handlerLedOK.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEEDR_FAST;

@@ -22,7 +22,7 @@ typedef struct{
 	uint8_t channel;		//Canal PWM relacionado con el TIMER
 	uint32_t prescaler;		//A qué velocidad se incrementa el TIMER
 	uint16_t periodo;		//Indica el número de veces que el TIMER se incrementa, el periodo de la frecuencia viene dado por Time_Fosc*PSC*ARR
-	uint16_t duttyCicle;		//Valor en % del tiempo que la señal está en alto
+	uint16_t duttyCicle;	//Valor en % del tiempo que la señal está en alto
 
 }PWM_Config_t;
 
