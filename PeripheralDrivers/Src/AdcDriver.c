@@ -107,7 +107,7 @@ void adc_Config(ADC_Config_t *adcConfig){
 	NVIC_EnableIRQ(ADC_IRQn);
 
 	/* 11b. Configuramos la prioridad para la interrupción ADC */
-	NVIC_SetPriority(ADC_IRQn, 4);
+	NVIC_SetPriority(ADC_IRQn, 6);
 
 	/* 12. Activamos el modulo ADC */
 	ADC1->CR2 &= ~ADC_CR2_ADON;

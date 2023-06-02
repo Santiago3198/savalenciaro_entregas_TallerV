@@ -14,7 +14,6 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include "stm32f4xx.h"
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
