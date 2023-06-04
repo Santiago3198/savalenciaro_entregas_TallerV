@@ -36,8 +36,11 @@ void configPLL (void){
 		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_4;
 		RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_5;
 
-		//PLLM = 10
-		RCC->PLLCFGR |= (0b1010 << RCC_PLLCFGR_PLLM_Pos);
+		//PLLM = 10 -- Para configurar a 80 MHz
+		//RCC->PLLCFGR |= (0b1010 << RCC_PLLCFGR_PLLM_Pos);
+
+		//PLL = 8 -- Para configurar a 100 MHz
+		RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_3;
 
 		//Limpiar los bit N del registro PLLCFGR
 		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_0;
@@ -50,7 +53,7 @@ void configPLL (void){
 		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_7;
 		RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLN_8;
 
-		//PLLN = 100		//001100100
+		//PLLN = 100
 		RCC->PLLCFGR |= (0b001100100 << RCC_PLLCFGR_PLLN_Pos);
 
 		//PLLP = 2
@@ -60,7 +63,7 @@ void configPLL (void){
 		FLASH->ACR &= ~(FLASH_ACR_LATENCY);
 
 		//Configurar 2 WS para el reloj
-		FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
+		FLASH->ACR |= (0x3 << FLASH_ACR_LATENCY_Pos);
 
 
 		//Habilitar el PLL
@@ -70,6 +73,24 @@ void configPLL (void){
 		//PLL como reloj del sistema
 		RCC->CFGR &= ~RCC_CFGR_SW_0;
 		RCC->CFGR |= RCC_CFGR_SW_1;
+
+		//Activar el MCO1 para realizar la medida del HSI
+		RCC->CFGR &= ~RCC_CFGR_MCO1_0;
+		RCC->CFGR &= ~RCC_CFGR_MCO1_1;
+
+		//Configuración del prescaler
+		RCC->CFGR &= ~RCC_CFGR_MCO1PRE_0;
+		RCC->CFGR &= ~RCC_CFGR_MCO1PRE_1;
+		RCC->CFGR &= ~RCC_CFGR_MCO1PRE_2;
+
+		//Activar el MCO2 para realizar la medida del PLL
+		RCC->CFGR |= RCC_CFGR_MCO2_0;
+		RCC->CFGR |= RCC_CFGR_MCO2_1;
+
+		//Configuración del prescaler
+		RCC->CFGR &= ~RCC_CFGR_MCO2PRE_0;
+		RCC->CFGR |= RCC_CFGR_MCO2PRE_1;
+		RCC->CFGR |= RCC_CFGR_MCO2PRE_2;
 }
 
 uint16_t getConfigPLL(void){
