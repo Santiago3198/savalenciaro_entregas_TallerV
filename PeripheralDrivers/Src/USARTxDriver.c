@@ -130,7 +130,10 @@ volatile uint16_t dataTx = 0;
 		}else if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_ENABLE){
 
 			//Se configura el baudrate cuando el PLL está activado a 80MHz
-			ptrUsartHandler->ptrUSARTx->BRR = 0x208D;
+			//ptrUsartHandler->ptrUSARTx->BRR = 0x208D;
+
+			//Se configura el baudrate cuando el PLL está activado a 100MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x28B1;
 
 		}else{
 			//Se configura el baudrate por defecto a 16MHz
@@ -151,7 +154,10 @@ volatile uint16_t dataTx = 0;
 		}else if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_ENABLE){
 
 			//Se configura el baudrate cuando el PLL está activado a 80MHz
-			ptrUsartHandler->ptrUSARTx->BRR = 0x1046;
+			//ptrUsartHandler->ptrUSARTx->BRR = 0x1046;
+
+			//Se configura el baudrate cuando el PLL está activado a 100MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x1458;
 
 		}else{
 			//Se configura el baudrate por defecto a 16MHz
@@ -172,7 +178,10 @@ volatile uint16_t dataTx = 0;
 		}else if(ptrUsartHandler->USART_Config.USART_PLL_EN == PLL_ENABLE){
 
 			//Se configura el baudrate cuando el PLL está activado a 80MHz
-			ptrUsartHandler->ptrUSARTx->BRR = 0x02B6;
+			//ptrUsartHandler->ptrUSARTx->BRR = 0x02B6;
+
+			//Se configura el baudrate cuando el PLL está activado a 100MHz
+			ptrUsartHandler->ptrUSARTx->BRR = 0x0364;
 
 		}else{
 

@@ -33,44 +33,51 @@ GPIO_Handler_t handlerPinRX = {0};
 BasicTimer_Handler_t handlerTimerBlinky = {0};
 BasicTimer_Handler_t handlerTimer5		= {0};
 
-USART_Handler_t handlerCommTerminal = {0};
+USART_Handler_t handlerCommTerminal 	= {0};
 
-ADC_Config_t channel_0 = {0};
+ADC_Config_t channel 			= {0};
+GPIO_Handler_t handlerPwmPin 	= {0};
+PWM_Handler_t handlerPWM 		= {0};
 
+#define CHANNELS   2
 uint8_t rxData = 0;
-uint8_t adcIsComplete = 0;
-uint8_t dataADC = 0;
+uint8_t adcIsComplete		= 0;
+uint8_t adcCounter = 0;
+uint16_t dataADC[2] = {0};
 
 char bufferData[128] = {0};
 
-//Definiciòn de los prototipos de funciones
+//Definición de los prototipos de funciones
 void initSystem(void);
+void configPLL(void);
+void ADC_ConfigMultichannel(ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
 
 int main(void){
 
+	configPLL();
 	initSystem();
 	writeMsg(&handlerCommTerminal, "\n~Iniciando Sistema~\n");
 
 	/*Loop forever*/
 	while(1){
+		if(rxData != '\0'){
 
-//
-//		if(rxData == '\0'){
-//
-//			if(rxData != 's'){
-//				//Activamos una conversión simple
-//				startSingleADC();
-//			}
-//			//Limpiamos el dato de RX
-//			rxData = '\0';
-//		}
+			if(rxData == 'a'){
+
+				// Iniciamos una conversión ADC
+
+				}
+
+			// Limpiamos el dato de RX
+			rxData = '\0';
+		}
 		if(adcIsComplete == 1){
 
-			//Enviamos los datos por consola
-			sprintf(bufferData, "data: %u\n", dataADC);
+			// Enviamos los datos por consola
+			sprintf(bufferData,"%u\t%u\n",dataADC[0],dataADC[1]);
 			writeMsg(&handlerCommTerminal, bufferData);
 
-			//Bajamos la bandera del ADC
+			// Bajamos la bandera del ADC
 			adcIsComplete = 0;
 		}
 	}
@@ -79,8 +86,8 @@ int main(void){
 void initSystem(void){
 
 	//Configuraciòn del Blinky
-	handlerBlinky.pGPIOx									= GPIOC;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber				= PIN_0;
+	handlerBlinky.pGPIOx									= GPIOA;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber				= PIN_5;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_OUT;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType				= GPIO_OTYPE_PUSHPULL;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinSpeed				= GPIO_OSPEEDR_FAST;
@@ -95,17 +102,9 @@ void initSystem(void){
 	handlerTimerBlinky.TIMx_Config.TIMx_interruptEnable		= 1;
 	BasicTimer_Config(&handlerTimerBlinky);
 
-	//Configurción TIM 5
-	handlerTimer5.ptrTIMx 									= TIM5;
-	handlerTimer5.TIMx_Config.TIMx_mode						= BTIMER_MODE_UP;
-	handlerTimer5.TIMx_Config.TIMx_speed					= BTIMER_SPEED_10us;
-	handlerTimer5.TIMx_Config.TIMx_period					= 500;
-	handlerTimer5.TIMx_Config.TIMx_interruptEnable			= 1;
-	BasicTimer_Config(&handlerTimer5);
-
-	//Configuraciòn de los pines para USART
+	//Configuración de los pines para USART
 	handlerPinTX.pGPIOx										= GPIOA;
-	handlerPinTX.GPIO_PinConfig.GPIO_PinNumber				= PIN_2;
+	handlerPinTX.GPIO_PinConfig.GPIO_PinNumber				= PIN_9;
 	handlerPinTX.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
 	handlerPinTX.GPIO_PinConfig.GPIO_PinOPType				= GPIO_OTYPE_PUSHPULL;
 	handlerPinTX.GPIO_PinConfig.GPIO_PinPuPdControl			= GPIO_PUPDR_NOTHING;
@@ -114,7 +113,7 @@ void initSystem(void){
 	GPIO_Config(&handlerPinTX);
 
 	handlerPinRX.pGPIOx										= GPIOA;
-	handlerPinRX.GPIO_PinConfig.GPIO_PinNumber				= PIN_3;
+	handlerPinRX.GPIO_PinConfig.GPIO_PinNumber				= PIN_10;
 	handlerPinRX.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
 	handlerPinRX.GPIO_PinConfig.GPIO_PinOPType				= GPIO_OTYPE_PUSHPULL;
 	handlerPinRX.GPIO_PinConfig.GPIO_PinPuPdControl			= GPIO_PUPDR_NOTHING;
@@ -122,8 +121,8 @@ void initSystem(void){
 	handlerPinRX.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
 	GPIO_Config(&handlerPinRX);
 
-	//Configuraciòn del puerto serial
-	handlerCommTerminal.ptrUSARTx	 						= USART2;
+	//Configuración del puerto serial
+	handlerCommTerminal.ptrUSARTx	 						= USART1;
 	handlerCommTerminal.USART_Config.USART_baudrate			= USART_BAUDRATE_115200;
 	handlerCommTerminal.USART_Config.USART_datasize			= USART_DATASIZE_8BIT;
 	handlerCommTerminal.USART_Config.USART_parity			= USART_PARITY_NONE;
@@ -134,16 +133,43 @@ void initSystem(void){
 	USART_Config(&handlerCommTerminal);
 
 	//Configuración ADC
-	channel_0.channel = ADC_CHANNEL_0;
-	channel_0.dataAlignment = ADC_ALIGNMENT_RIGHT;
-	channel_0.samplingPeriod = ADC_SAMPLING_PERIOD_84_CYCLES;
-	channel_0.resolution = ADC_RESOLUTION_12_BIT;
-	adc_Config(&channel_0);
+	channel.numberOfChannels		= CHANNELS;
+	channel.multiChannel[0] 		= ADC_CHANNEL_1;
+	channel.multiChannel[1] 		= ADC_CHANNEL_4;
+	channel.multiSampling[0] 		= ADC_SAMPLING_PERIOD_84_CYCLES;
+	channel.multiSampling[1] 		= ADC_SAMPLING_PERIOD_84_CYCLES;
+	channel.dataAlignment 			= ADC_ALIGNMENT_RIGHT;
+	channel.resolution 				= ADC_RESOLUTION_12_BIT;
+	channel.eventType				= EXTERNAL_EVENT_ENABLE;
+	channel.AdcEvent				= 8;
+	ADC_ConfigMultichannel(&channel, CHANNELS);
+
+	//Configuración del pin para el PWM
+	handlerPwmPin.pGPIOx 								= GPIOA;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_6;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinMode   		= GPIO_MODE_ALTFN;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinPuPdControl 	= GPIO_PUPDR_NOTHING;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinSpeed  		= GPIO_OSPEEDR_FAST;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF2;
+	GPIO_Config(&handlerPwmPin);
+
+	//Configuración de la señal PWM
+	handlerPWM.ptrTIMx 				= TIM3;
+	handlerPWM.config.channel 		= PWM_CHANNEL_1;
+	handlerPWM.config.duttyCicle 	= 33;
+	handlerPWM.config.periodo 		= 66;
+	handlerPWM.config.prescaler 	= 100;
+	pwm_Config(&handlerPWM);
+
+	startPwmSignal(&handlerPWM);
+
+	//Se carga la configuración de las interrupciones
+	ADC_Channel_Interrupt(&channel);
 }
 
-void usart2Rx_Callback(void){
+void usart1Rx_Callback(void){
 	//Leemos elvalor del registro DR, donde se almacena el dato que llega.
-	//Esto ademàs debe bajar la bandera de la interrupciòn
 	rxData = getRxData();
 }
 
@@ -152,12 +178,13 @@ void BasicTimer2_Callback(void){
 	GPIOxTooglePin(&handlerBlinky);
 }
 
-void BasicTimer5_Callback(void){
-	startSingleADC();
-}
-
-void adcComplete_Callback(void){
-
-	dataADC = getADC();
-	adcIsComplete = SET;
-}
+//void adcComplete_Callback(void){
+//	dataADC[adcCounter] = getADC();
+//	if(adcCounter < (CHANNELS-1)){
+//		adcCounter++;
+//	}
+//	else{
+//		adcIsComplete = 1;
+//		adcCounter = 0;
+//	}
+//}

@@ -36,6 +36,9 @@
 #define ADC_ALIGNMENT_RIGHT		0
 #define ADC_ALIGNMENT_LEFT		1
 
+#define EXTERNAL_EVENT_DISABLE	0
+#define EXTERNAL_EVENT_ENABLE	1
+
 #define ADC_SAMPLING_PERIOD_3_CYCLES	0b000;
 #define ADC_SAMPLING_PERIOD_15_CYCLES	0b001;
 #define ADC_SAMPLING_PERIOD_28_CYCLES	0b010;
@@ -51,7 +54,12 @@ typedef struct
 	uint8_t		resolution;			// Precisión con la que el ADC hace la adquisición del dato
 	uint16_t	samplingPeriod;		// Tiempo deseado para hacer la adquisición del dato
 	uint8_t		dataAlignment;		// Alineación a la izquierda o a la derecha
-	uint16_t	adcData;			//Dato de la conversión
+	uint16_t	adcData;			// Dato de la conversión
+	uint8_t		numberOfChannels;	// Número de canales a utilizar
+	uint8_t		eventType;			// Tipo de evento
+	uint8_t 	AdcEvent;			// Canal a seleccionar
+	uint8_t 	multiChannel[16];	// Selección de canales múltiples para el ADC
+	uint8_t 	multiSampling[16];	// Selección del sampling
 }ADC_Config_t;
 
 void adc_Config(ADC_Config_t *adcConfig);
@@ -61,6 +69,8 @@ void startSingleADC(void);
 void startContinousADC(void);
 uint16_t getADC(void);
 
-//void ADC_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
+void ADC_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
+
+void ADC_Channel_Interrupt(ADC_Config_t *adcConfig);
 
 #endif /* INC_ADCDRIVER_H_ */

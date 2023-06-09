@@ -71,7 +71,7 @@ int main(void){
 
 		if(usart2DataReceived != '\0'){
 			//Echo para enviar de vuelta el mensaje recibido
-			sprintf(dataMsg, "Recibido el sgte caracter = %c \n", usart2DataReceived);
+			sprintf(dataMsg, "Recibido el sgte caracter = %u \n", usart2DataReceived);
 			writeMsg(&usart2Comm, dataMsg);
 
 			usart2DataReceived = '\0';

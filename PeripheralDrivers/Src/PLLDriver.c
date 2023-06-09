@@ -39,7 +39,7 @@ void configPLL (void){
 		//PLLM = 10 -- Para configurar a 80 MHz
 		//RCC->PLLCFGR |= (0b1010 << RCC_PLLCFGR_PLLM_Pos);
 
-		//PLL = 8 -- Para configurar a 100 MHz
+		//PLLM = 8 -- Para configurar a 100 MHz
 		RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_3;
 
 		//Limpiar los bit N del registro PLLCFGR
@@ -75,22 +75,18 @@ void configPLL (void){
 		RCC->CFGR |= RCC_CFGR_SW_1;
 
 		//Activar el MCO1 para realizar la medida del HSI
-		RCC->CFGR &= ~RCC_CFGR_MCO1_0;
-		RCC->CFGR &= ~RCC_CFGR_MCO1_1;
+		RCC->CFGR &= ~RCC_CFGR_MCO1;
 
 		//Configuración del prescaler
-		RCC->CFGR &= ~RCC_CFGR_MCO1PRE_0;
-		RCC->CFGR &= ~RCC_CFGR_MCO1PRE_1;
-		RCC->CFGR &= ~RCC_CFGR_MCO1PRE_2;
+		RCC->CFGR &= ~RCC_CFGR_MCO1PRE;
 
 		//Activar el MCO2 para realizar la medida del PLL
-		RCC->CFGR |= RCC_CFGR_MCO2_0;
-		RCC->CFGR |= RCC_CFGR_MCO2_1;
+		RCC->CFGR &= ~RCC_CFGR_MCO2;
+		RCC->CFGR |= RCC_CFGR_MCO2;
 
 		//Configuración del prescaler
-		RCC->CFGR &= ~RCC_CFGR_MCO2PRE_0;
-		RCC->CFGR |= RCC_CFGR_MCO2PRE_1;
-		RCC->CFGR |= RCC_CFGR_MCO2PRE_2;
+		RCC->CFGR &= ~RCC_CFGR_MCO2PRE;
+		RCC->CFGR |= (0b110 << RCC_CFGR_MCO2PRE_Pos);
 }
 
 uint16_t getConfigPLL(void){
