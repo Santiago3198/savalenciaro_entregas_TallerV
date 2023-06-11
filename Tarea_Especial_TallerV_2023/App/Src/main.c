@@ -183,8 +183,8 @@ int main(void){
 				sprintf(bufferData, "X ; Y ; Z \n");
 				writeMsgTX(&handlerUsart1, bufferData);
 
-				for(uint16_t i = 0; i < 2000; i++)
-				{
+				for(uint16_t i = 0; i < 2000; i++){
+
 					sprintf(bufferData, "%d | %.2f; %.2f; %.2f; \n", i+1, (float)arrayX[i]*converFact, (float)arrayY[i]*converFact, (float)arrayZ[i]*converFact);
 					writeMsgTX(&handlerUsart1, bufferData);
 				}

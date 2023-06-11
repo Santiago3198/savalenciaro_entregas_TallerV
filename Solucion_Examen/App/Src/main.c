@@ -165,29 +165,11 @@ int main(void){
 		}
 		if(flagAcc == 1){
 
-			writeMsg(&handlerUsart1, "Datos guardados correctamente \n");
+			writeMsg(&handlerUsart1, "\nDatos guardados correctamente \n");
 			flagAcc = 0;
 		}
 	}
 	return 0;
-}
-
-void saveAccX(void) {
-
-	uint8_t AccelX_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_L);
-	uint8_t AccelX_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_H);
-	int16_t AccelX = AccelX_high << 8 | AccelX_low;
-
-	arrayX[indx] = AccelX;
-}
-
-void saveAccY(void) {
-
-	uint8_t AccelY_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_L);
-	uint8_t AccelY_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_H);
-	int16_t AccelY = AccelY_high << 8 | AccelY_low;
-
-	arrayY[indx] = AccelY;
 }
 
 void saveAccZ(void) {
@@ -211,26 +193,30 @@ void parseCommands(char *ptrBufferReception){
 	//El primer comando imprime una lista  con los otros comandos que tiene el equipo
 	if(strcmp(cmd, "help") == 0){
 
-		writeMsg(&handlerUsart1, " \n Help Menu CMDs: \n");
-		writeMsg(&handlerUsart1, " \n Por favor ingrese un comando seguido de los parámetros a modificar separados por espacios \n");
-		writeMsg(&handlerUsart1, " \n 1) help   -->   Menú de ayuda \n");
-		writeMsg(&handlerUsart1, " \n 2) usermsg - Ingrese un mensaje  -->  Ingrese el mensaje que desea enviar \n");
-		writeMsg(&handlerUsart1, " \n 3) signal - Seleccione la señal  -->  Seleccione HSI, LSE o PLL \n");
-		writeMsg(&handlerUsart1, "    Señor usuario, recuerde que el PLL está a 100 MHz por lo que se configura un prescaler de 4 (default) para su visualización \n");
-		writeMsg(&handlerUsart1, "    El prescaler puede modificarlo posteriormente a conveniencia \n");
-		writeMsg(&handlerUsart1, " \n 4) prescaler - Valor del prescaler  -->  Ingrese el valor del prescaler deseado \n");
-		writeMsg(&handlerUsart1, "    El número ingresado representa el valor por el cual será dividida la señal \n");
-		writeMsg(&handlerUsart1, "			1 --> div1 \n");
-		writeMsg(&handlerUsart1, "			2 --> div2 \n");
-		writeMsg(&handlerUsart1, "			3 --> div3 \n");
-		writeMsg(&handlerUsart1, "			4 --> div4 \n");
-		writeMsg(&handlerUsart1, "			5 --> div5 \n");
-		writeMsg(&handlerUsart1, " \n 5) frequency - Ingrese un caracter - Ingrese el valor de la velocidad \n");
+		writeMsg(&handlerUsart1, "\n Help Menu CMDs: \n");
+		writeMsg(&handlerUsart1, "\n Por favor ingrese un comando seguido de los parámetros a modificar separados por espacios \n");
+		writeMsg(&handlerUsart1, "\n 1) help   -->   Menú de ayuda \n");
+		writeMsg(&handlerUsart1, "\n 2) usermsg - Ingrese un mensaje  -->  Ingrese el mensaje que desea enviar \n");
+		writeMsg(&handlerUsart1, "\n 3) signal - Seleccione la señal  -->  Seleccione HSI, LSE o PLL \n");
+		writeMsg(&handlerUsart1, "   Señor usuario, recuerde que el PLL está a 100 MHz por lo que se configura un prescaler de 4 (default) para su visualización \n");
+		writeMsg(&handlerUsart1, "   El prescaler puede modificarlo posteriormente a conveniencia \n");
+		writeMsg(&handlerUsart1, "\n 4) prescaler - Valor del prescaler  -->  Ingrese el valor del prescaler deseado \n");
+		writeMsg(&handlerUsart1, "   El número ingresado representa el valor por el cual será dividida la señal \n");
+		writeMsg(&handlerUsart1, "		1 --> div1 \n");
+		writeMsg(&handlerUsart1, "		2 --> div2 \n");
+		writeMsg(&handlerUsart1, "		3 --> div3 \n");
+		writeMsg(&handlerUsart1, "		4 --> div4 \n");
+		writeMsg(&handlerUsart1, "		5 --> div5 \n");
+		writeMsg(&handlerUsart1, "\n 5) frequency - Ingrese un caracter - Ingrese el valor de la velocidad \n");
 		writeMsg(&handlerUsart1, "    Ingrese un valor entre 1 y 100 para modificar la velocidad del muestreo \n" );
-		writeMsg(&handlerUsart1, " \n 6) dataAdc  -->  Show the ADC data \n");
+		writeMsg(&handlerUsart1, "\n 6) dataAdc  -->  Show the ADC data \n");
 		writeMsg(&handlerUsart1, "    Con este comando muestra dos arreglos de 256 datos c/u tomados con el ADC \n");
-		writeMsg(&handlerUsart1, " \n 7) capture  -->  Captura los datos tomados en el Accel y los guarda en un arreglo para cada eje \n ");
-		writeMsg(&handlerUsart1, " \n 8) dataFFT  -->  Muestra la transformada rápida de Fourier de los datos tomados del Accel \n ");
+		writeMsg(&handlerUsart1, "\n 7) stateAcc  -->  \n");
+		writeMsg(&handlerUsart1, "    Señor usuario, para usar los comandos del Accel primero debe resetear su configuración \n");
+		writeMsg(&handlerUsart1, "\n 8) resetAcc  -->  Resetea la configuración del Accel \n");
+		writeMsg(&handlerUsart1, "\n 9) capture  -->  Captura los datos tomados en el Accel y los guarda en un arreglo para cada eje \n ");
+		writeMsg(&handlerUsart1, "\n 10) sampleZ  -->  Comando que imprime una muestra de 50 datos tomados por el Accel \n");
+		writeMsg(&handlerUsart1, "\n 11) dataFFT  -->  Muestra la transformada rápida de Fourier de los datos tomados del Accel \n ");
 
 	}
 
@@ -238,7 +224,7 @@ void parseCommands(char *ptrBufferReception){
 	else if(strcmp(cmd, "usermsg") == 0){
 
 		//Si el usuario desea enviar un mensaje
-		writeMsg(&handlerUsart1, "\n COMD: usermsg \n");
+		writeMsg(&handlerUsart1, "\nCOMD: usermsg \n");
 		writeMsg(&handlerUsart1, userMsg);
 		writeMsg(&handlerUsart1, "\n");
 	}
@@ -249,7 +235,7 @@ void parseCommands(char *ptrBufferReception){
 		//Si se desea mostrar el reloj HSI
 		if(strcmp(userMsg, "HSI") == 0){
 
-			writeMsg(&handlerUsart1, "\n HSI selected \n");
+			writeMsg(&handlerUsart1, "\nHSI selected \n");
 
 			//Seleccionar el HSI
 			RCC->CFGR &= ~RCC_CFGR_MCO1_0;
@@ -259,7 +245,7 @@ void parseCommands(char *ptrBufferReception){
 		//Si se desea mostrar el reloj LSE
 		else if(strcmp(userMsg, "LSE") == 0){
 
-			writeMsg(&handlerUsart1, "\n LSE selected \n");
+			writeMsg(&handlerUsart1, "\nLSE selected \n");
 
 			//Se habilita la señal para el APB1
 			RCC->APB1ENR &= ~RCC_APB1ENR_PWREN;
@@ -281,7 +267,7 @@ void parseCommands(char *ptrBufferReception){
 		//Si se desea mostrar el reloj PLL
 		else if(strcmp(userMsg, "PLL") == 0){
 
-			writeMsg(&handlerUsart1, "\n PLL selected \n");
+			writeMsg(&handlerUsart1, "\nPLL selected \n");
 
 			//Prescaler divide por 4
 			RCC->CFGR &= ~RCC_CFGR_MCO1PRE;
@@ -295,7 +281,7 @@ void parseCommands(char *ptrBufferReception){
 		else{
 
 			//Escribir mensaje de error
-			writeMsg(&handlerUsart1, "\n Error!: Invalid source selected \n");
+			writeMsg(&handlerUsart1, "\nError!: Invalid source selected \n");
 		}
 	}
 	else if(strcmp(cmd, "prescaler") == 0){
@@ -303,14 +289,14 @@ void parseCommands(char *ptrBufferReception){
 		//Se carga el valor del prescaler en el registro correspondiente
 		if(strcmp(userMsg, "1") == 0){
 
-			writeMsg(&handlerUsart1, "\n Prescaler value is: 1 \n");
+			writeMsg(&handlerUsart1, "\nPrescaler value is: 1 \n");
 
 			//No se divide
 			RCC->CFGR &= ~RCC_CFGR_MCO1PRE;
 		}
 		else if(strcmp(userMsg, "2") == 0){
 
-			writeMsg(&handlerUsart1, "\n Prescaler value is: 2 \n");
+			writeMsg(&handlerUsart1, "\nPrescaler value is: 2 \n");
 
 			//Prescaler divide por 2
 			RCC->CFGR &= ~RCC_CFGR_MCO1PRE;
@@ -318,7 +304,7 @@ void parseCommands(char *ptrBufferReception){
 		}
 		else if(strcmp(userMsg, "3") == 0){
 
-			writeMsg(&handlerUsart1, "\n Prescaler value is: 3 \n");
+			writeMsg(&handlerUsart1, "\nPrescaler value is: 3 \n");
 
 			//Prescaler divide por 3
 			RCC->CFGR &= ~RCC_CFGR_MCO1PRE;
@@ -327,7 +313,7 @@ void parseCommands(char *ptrBufferReception){
 		}
 		else if(strcmp(userMsg, "4") == 0){
 
-			writeMsg(&handlerUsart1, "\n Prescaler value is: 4 \n");
+			writeMsg(&handlerUsart1, "\nPrescaler value is: 4 \n");
 
 			//Prescaler divide por 4
 			RCC->CFGR &= ~RCC_CFGR_MCO1PRE;
@@ -336,7 +322,7 @@ void parseCommands(char *ptrBufferReception){
 		}
 		else if(strcmp(userMsg, "5") == 0){
 
-			writeMsg(&handlerUsart1, "\n Prescaler value is: 5 \n");
+			writeMsg(&handlerUsart1, "\nPrescaler value is: 5 \n");
 
 			//Prescaler divide por 5
 			RCC->CFGR &= ~RCC_CFGR_MCO1PRE;
@@ -344,7 +330,7 @@ void parseCommands(char *ptrBufferReception){
 		}
 		else{
 			//Se envía un mensaje de error
-			writeMsg(&handlerUsart1, "\n Error!: Invalid prescaler value \n");
+			writeMsg(&handlerUsart1, "\nError!: Invalid prescaler value \n");
 		}
 	}
 	else if(strcmp(cmd, "frequency") == 0){
@@ -365,14 +351,14 @@ void parseCommands(char *ptrBufferReception){
 		}
 		else{
 
-			writeMsg(&handlerUsart1, "\n Error!: Invalid value to sample \n");
+			writeMsg(&handlerUsart1, "\nError!: Invalid value to sample \n");
 		}
 	}
 	else if(strcmp(cmd, "dataAdc") == 0){
 
 		startPwmSignal(&handlerPWM);
 
-		writeMsg(&handlerUsart1, "Tomando datos \n");
+		writeMsg(&handlerUsart1, "\nTomando datos \n");
 		flag = 1;
 
 		while(!flag){
@@ -391,7 +377,7 @@ void parseCommands(char *ptrBufferReception){
 	else if(strcmp(cmd, "capture") == 0){
 
 		//Mensaje para el usuario
-		writeMsg(&handlerUsart1, "\n Guardando datos... \n");
+		writeMsg(&handlerUsart1, "\nGuardando datos... \n");
 
 		//Levantamos la bandera para indicar que se deben almacenar los datos
 		saveDataAccFlag = 1;
@@ -421,19 +407,15 @@ void parseCommands(char *ptrBufferReception){
 	}
 	else if(strcmp(cmd, "sampleZ") == 0){
 
-		sprintf(bufferData, "Axis Z data (r)\n");
-		writeMsgTX(&handlerUsart1, bufferData);
+		for(uint16_t j = 0; j < 50; j++){
 
-		uint8_t AccelZ_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_L);
-		uint8_t AccelZ_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_H);
-		int16_t AccelZ = AccelZ_high << 8 | AccelZ_low;
-		sprintf(bufferData, "AccelZ = %d \n", (int) AccelZ);
-		writeMsgTX(&handlerUsart1, bufferData);
-		rxData = '\0';
+			sprintf(bufferData, "%d | %.2f \n", j+1, (float)arrayZ[j]*converFact);
+			writeMsgTX(&handlerUsart1, bufferData);
+		}
 	}
 	else{
 		//Se imprime el mensaje "Wrong CMD" si la escritura no corresponde a los CMD implementados
-		writeMsg(&handlerUsart1, "\n Wrong CMD \n");
+		writeMsg(&handlerUsart1, "\nWrong CMD \n");
 	}
 }
 
@@ -590,8 +572,6 @@ void BasicTimer3_Callback(void){
 		return;
 	}
 
-	saveAccX();
-	saveAccY();
 	saveAccZ();
 
 	indx++;
