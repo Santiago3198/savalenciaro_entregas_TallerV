@@ -11,79 +11,82 @@
 
 void RTC_Config(RTC_Handler_t *ptrRtcHandler) {
 
-	/*DBP Bit of the PWR_CR must be set to enable RTC registers write access
-	 * *******************************************************
-	 * Writing to the RTC registers is enabled by writing a key
-	 * to the RTC_WPR register: 0xCA , 0x53
-	 */
+	// Habilitar el PWR Clock
+	RCC->APB1ENR |= RCC_APB1ENR_PWREN;
 
-	/* Calendar initialization and configuration */
+	//Accediendo al RTC
+	PWR->CR  |= PWR_CR_DBP;
 
-	RCC->APB1ENR |= RCC_APB1ENR_PWREN; // Enable pwr clock
+	//Habilitar la fuente del reloj
+	RCC->BDCR |= RCC_BDCR_RTCEN;
 
-	PWR->CR  |= PWR_CR_DBP; // Access to  RTC
+	// Set the LSE clock on
+	RCC->BDCR |= RCC_BDCR_LSEON;
 
+	// Select the LSE crystal as clock
+	RCC->BDCR |= RCC_BDCR_RTCSEL_0;
 
-	RCC->BDCR |= RCC_BDCR_RTCEN;		  // Enable change clock source
-	RCC->BDCR |= RCC_BDCR_LSEON;		  // Set the LSE clock on
-	RCC->BDCR |= RCC_BDCR_RTCSEL_0;		  // Select the LSE crystal as clock
-
-	/* Wait until LSE is ready */
+	//Tiempo de espera para que el reloj se estabilice
 	while(!(RCC->BDCR & RCC_BDCR_LSERDY)){
 		__NOP() ;
 	}
 
-	RTC->WPR = (0xCA /*<< RTC_WPR_KEY_Pos*/); // Key unlock write protection
-	RTC->WPR = (0x53 /*<< RTC_WPR_KEY_Pos*/); // Key unlock write protection
+	//Bits de protección contra escritura (se deshabilitan)
+	RTC->WPR = (0xCA);
+	RTC->WPR = (0x53);
 
-	/* Wait for RTC APB registers synch
-	while(!(RTC->ISR & RTC_ISR_RSF)){
-		__NOP() ;
-	} */
+	//Modo inicialización
+	RTC->ISR |= RTC_ISR_INIT;
 
-	RTC->ISR |= RTC_ISR_INIT;			  // Enter initialization mode
-	while (!(RTC->ISR & RTC_ISR_INITF)){  //Poll INITF
+	while (!(RTC->ISR & RTC_ISR_INITF)){
 		__NOP() ;
 	}
 
-	/* Synchronous prescaler factor; The asynchronous prescaler division factor
-	 * is set to 128, and the synchronous division factor to 256, to obtain an
-	 * internal clock frequency of 1 Hz (ck_spre) with an LSE frequency of 32.768 kHz. */
+	/* La frecuencia del LSE es de 32 kHz, por lo que el prescaler asíncrono
+	 * debe configurarse en 128 y el prescaler síncrono en 256 para que la
+	 * frecuencia interna del reloj sea de aproximadamente 1Hz
+	 */
 
 	RTC->PRER |= RTC_PRER_PREDIV_A;
 	RTC->PRER |= 0xFF << 0 ;
 
-	/* Load the initial time and date in the RTC_TR , RTC_DT and configure time format
-	 * through the FMT bit in RTC_CR register */
+	//Se carga la configuración inicial para el RTC
     RTC->CR |= RTC_CR_BYPSHAD;
 
-	RTC->TR = 0; // Clear Time Registers
-	RTC->DR = 0; // Clear Date Registers
+    //Se limpian los registros
+	RTC->TR = 0;
+	RTC->DR = 0;
 
-	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_Year) / 10) << RTC_DR_YT_Pos;  // Year Tens in BCD
-	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_Year) % 10) << RTC_DR_YU_Pos;  // Year Units in BCD
+	//Config del formato
+	RTC->CR |= ((ptrRtcHandler->RTC_Config.RTC_TimeFormat) << RTC_CR_FMT_Pos);
 
-	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_WeekDay)) << RTC_DR_WDU_Pos;  // WeekDay in BCD
+	//Config del año
+	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_Year) / 10) << RTC_DR_YT_Pos;
+	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_Year) % 10) << RTC_DR_YU_Pos;
 
-	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_Month) / 10) << RTC_DR_MT_Pos;  // Month Units in BCD
-	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_Month) % 10) << RTC_DR_MU_Pos;  // Month Tens in BCD
+	//Config del mes
+	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_Month) / 10) << RTC_DR_MT_Pos;
+	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_Month) % 10) << RTC_DR_MU_Pos;
 
-	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_ValueDay) / 10) << RTC_DR_DT_Pos;   // Date Tens in BCD
-	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_ValueDay) % 10) << RTC_DR_DU_Pos;   // Date Units in BCD
+	//Config de la semana
+	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_WeekDay)) << RTC_DR_WDU_Pos;
 
+	//Config del día
+	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_ValueDay) / 10) << RTC_DR_DT_Pos;
+	RTC->DR |= ((ptrRtcHandler->RTC_Config.RTC_ValueDay) % 10) << RTC_DR_DU_Pos;
 
-	RTC->CR |= ((ptrRtcHandler->RTC_Config.RTC_TimeFormat) << RTC_CR_FMT_Pos);  	// 0: 24h format, 1: 12h format
+	//Config de la hora
+	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Hours) / 10) << RTC_TR_HT_Pos;
+	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Hours) % 10) << RTC_TR_HU_Pos;
 
-	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Hours) / 10) << RTC_TR_HT_Pos;  // Hours Tens in BCD
-	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Hours) % 10) << RTC_TR_HU_Pos;  // Hours Units in BCD
+	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Minutes) / 10) << RTC_TR_MNT_Pos;
+	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Minutes) % 10) << RTC_TR_MNU_Pos;
 
-	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Minutes) / 10) << RTC_TR_MNT_Pos;  // Minutes Tens in BCD
-	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Minutes) % 10) << RTC_TR_MNU_Pos;  // Minutes Units in BCD
+	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Seconds) / 10) << RTC_TR_ST_Pos;
+	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Seconds) % 10) << RTC_TR_SU_Pos;
 
-	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Seconds) / 10) << RTC_TR_ST_Pos;   // Seconds Tens in BCD
-	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_Seconds) % 10) << RTC_TR_SU_Pos;   // Seconds Units in BCD
-
-	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_TimeNotation) << RTC_TR_PM_Pos);  // 0: is am or 24hformat 1: is pm
+	//Config del formato de la hora
+	RTC->TR |= ((ptrRtcHandler->RTC_Config.RTC_TimeNotation) << RTC_TR_PM_Pos);
 
 	/* Exiting initialization mode by clearing init bit */
 
@@ -96,12 +99,12 @@ void RTC_Config(RTC_Handler_t *ptrRtcHandler) {
 }
 
 
-//Definición de las variables necesarias para  el RTC
+//Definición de variables
 
-uint16_t calendario [7] = {0};//Esta es la variable en la que se almacena los valores de la funcion puntero read_date
+//Almacena los valores de la función read_date
+uint16_t calendario [7] = {0};
 
-
-// funcion para realizar la conversion de formato BCD y decimal
+//Conversion de formato BCD
 uint16_t RTC_BcdToByte(uint16_t BCD_Value){
 
     uint16_t Decimal_Value = ((BCD_Value/16*10) + (BCD_Value%16));
@@ -112,18 +115,18 @@ uint16_t RTC_BcdToByte(uint16_t BCD_Value){
 void *read_date(void){
 
 	 uint16_t RTC_Hours     = 0;
-	 uint16_t RTC_Minutes = 0;
-	 uint16_t RTC_Seconds = 0;
+	 uint16_t RTC_Minutes 	= 0;
+	 uint16_t RTC_Seconds 	= 0;
 
-	 uint16_t RTC_year = 0;
-	 uint16_t RTC_Month = 0;
-	 uint16_t RTC_Day = 0;
-	 uint16_t RTC_Weekday = 0;
+	 uint16_t RTC_year 		= 0;
+	 uint16_t RTC_Month 	= 0;
+	 uint16_t RTC_Day 		= 0;
+	 uint16_t RTC_Weekday 	= 0;
 
-	 uint32_t RTC_Time = 0;
+	 uint32_t RTC_Time 		= 0;
 	 RTC_Time = RTC->TR;
 
-	 uint32_t RTC_Date = 0;
+	 uint32_t RTC_Date 		= 0;
 	 RTC_Date = RTC->DR;
 
 	 RTC_Hours	 = RTC_BcdToByte(((RTC_Time & 0x3F0000) >> 16));
@@ -147,81 +150,99 @@ void *read_date(void){
 }
 
 
-// Funcion que convierte una variable numerica en un string
-void Mes (uint16_t Mes , char *Month_){
+// Funcion de configuración del mes
+void config_Month(uint16_t Mes , char *Month_){
+
 	switch(Mes){
 			case JAN:
 				sprintf(Month_,"Jan");
 				break;
+
 			case FEB:
 				sprintf(Month_,"Feb");
 				break;
+
 			case APR:
 				sprintf(Month_,"Apr");
 				break;
+
 			case MAR:
 				sprintf(Month_,"Mar");
 				break;
+
 			case MAY:
 				sprintf(Month_,"May");
 				break;
+
 			case JUN:
 				sprintf(Month_,"Jun");
 				break;
+
 			case JUL:
 				sprintf(Month_,"Jul");
 				break;
+
 			case AUG:
 				sprintf(Month_,"Aug");
 				break;
+
 			case SEP:
 				sprintf(Month_,"Sep");
 				break;
+
 			case OCT:
 				sprintf(Month_,"Oct");
 				break;
+
 			case NOV:
 				sprintf(Month_,"Nov");
 				break;
+
 			case DEC:
 				sprintf(Month_,"Dec");
 				break;
+
 			default:
-				sprintf(Month_,"REN");
-				// Funcion de Error en el DEFAULT (no lo dejo vacio para que reporte un error)
+				sprintf(Month_,"Error!: Invalid input \n");
 				break;
 			}
 
 }
 
 // Funcion que convierte el valor numerico del dia en un string con el nombre del dia de la semana
-void semana (uint16_t dia, char *Weekday_){
+void config_Week(uint16_t dia, char *Weekday_){
 
 	switch(dia){
 		case MONDAY:
 			sprintf(Weekday_,"Monday");
 			break;
+
 		case TUESDAY:
 			sprintf(Weekday_,"Tuesday");
 			break;
+
 		case WEDNESDAY:
 			sprintf(Weekday_,"Wednesday");
 			break;
+
 		case THURSDAY:
 			sprintf(Weekday_,"Thursday");
 			break;
+
 		case FRIDAY:
 			sprintf(Weekday_,"Friday");
 			break;
+
 		case SATURDAY:
 			sprintf(Weekday_,"Saturday");
 			break;
+
 		case SUNDAY:
 			sprintf(Weekday_,"Sunday");
 			break;
+
 		default:
-			sprintf(Weekday_,"Rengiday");
-			// Funcion de Error en el DEFAULT (no lo dejo vacio para que reporte un error)
+			sprintf(Weekday_,"Error!: Invalid input \n");
 			break;
 		}
 }

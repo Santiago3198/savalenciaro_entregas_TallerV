@@ -125,7 +125,7 @@ int main(void){
 				writeMsgTX(&handlerUsart1, bufferData);
 				rxData = '\0';
 				}
-				else if(rxData == 'r'){
+			else if(rxData == 'r'){
 				sprintf(bufferData, "PWR_MGMT_1 reset (w)\n");
 				writeMsgTX(&handlerUsart1, bufferData);
 

@@ -17,6 +17,8 @@
 #define BTIMER_SPEED_100us					1600
 #define BTIMER_SPEED_16000us				16000
 #define BTIMER_SPEED_PLL_80_MHz_100us		8000
+#define BTIMER_SPEED_PLL_100_MHz_100us		10000
+
 
 /*Estructura que contiene la configuracion minima necesaria para el manejo del timer*/
 
