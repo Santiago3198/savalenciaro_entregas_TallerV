@@ -431,8 +431,36 @@ void parseCommands(char *ptrBufferReception){
 	else if(strcmp(cmd, "hora") == 0){
 
 		//Se cargan los parámetros ingresados por el usuario
-		handlerRTC.hours = firstParameter;
-		handlerRTC.minuts = secondParameter;
+		if(handlerRTC.format == MODE_24H){
+
+			if((firstParameter >= 0) && (firstParameter < 24)){
+				handlerRTC.hours = firstParameter;
+			}
+			else{
+				writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
+			}
+			if((secondParameter >= 0) && (secondParameter < 60)){
+				handlerRTC.minuts = secondParameter;
+			}
+			else{
+				writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
+			}
+		}
+		else if(handlerRTC.format == MODE_12H){
+
+			if((firstParameter > 0) && (firstParameter <= 12)){
+				handlerRTC.hours = firstParameter;
+			}
+			else{
+				writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
+			}
+			if((secondParameter >= 0) && (secondParameter < 60)){
+				handlerRTC.minuts = secondParameter;
+			}
+			else{
+				writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
+			}
+		}
 
 		//Configuración del formato de las horas
 		if(strcmp(userMsg, "24H") == 0){
@@ -449,7 +477,7 @@ void parseCommands(char *ptrBufferReception){
 		else{
 
 			//Mensaje de error
-			writeMsg(&handlerUsart1, "\nError!: Invalid input value\n");
+			writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
 		}
 		RTC_Config(&handlerRTC);
 
@@ -462,7 +490,6 @@ void parseCommands(char *ptrBufferReception){
 		uint8_t horaUni = 0;
 		uint8_t horaDec = 0;
 		uint8_t AM_PM = 0;
-		uint8_t valueHora = 0;
 
 		secUni = read_time()[0];
 		secDec = read_time()[1];
@@ -471,7 +498,6 @@ void parseCommands(char *ptrBufferReception){
 		horaUni = read_time()[4];
 		horaDec = read_time()[5];
 		AM_PM = read_time()[6];
-		valueHora = ((horaDec * 10) + horaUni);
 
 		if(AM_PM == 0){
 			sprintf(bufferDataRTC, "Hora: %u%u:%u%u:%u%u AM\n", horaDec, horaUni, minDec, minUni, secDec, secUni);
