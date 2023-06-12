@@ -61,7 +61,7 @@ uint8_t rxData = 0;
 uint8_t i2cBuffer = 0;
 uint16_t indx = 0;
 uint8_t saveDataAccFlag = 0;
-char bufferData[64] = "Accel MP-6050";
+char bufferData[64] = {0};
 
 //Variables relacionadas con el ADC
 uint8_t adcIsComplete	= 0;
@@ -90,7 +90,7 @@ uint16_t arrayX[1024] = {0};
 uint16_t arrayY[1024] = {0};
 uint16_t arrayZ[1024] = {0};
 uint8_t flagAcc = 0;
-float converFact = (2.0/32767.0)*(9.8);			//Factor de conversión para los datos del accel
+float converFact = (1.9/32767.0)*(9.8);			//Factor de conversión para los datos del accel
 
 //Definición número de canales para usar el ADC
 #define CHANNELS   2
@@ -160,6 +160,7 @@ int main(void){
 
 		//Hacemos un análisis de la cadena de datos obtenida
 		if(stringComplete){
+
 			parseCommands(bufferReception);
 			stringComplete = false;
 		}
@@ -209,14 +210,15 @@ void parseCommands(char *ptrBufferReception){
 		writeMsg(&handlerUsart1, "		5 --> div5 \n");
 		writeMsg(&handlerUsart1, "\n 5) frequency - Ingrese un caracter - Ingrese el valor de la velocidad \n");
 		writeMsg(&handlerUsart1, "    Ingrese un valor entre 1 y 200 para modificar la velocidad del muestreo \n" );
-		writeMsg(&handlerUsart1, "\n 6) dataAdc  -->  Show the ADC data \n");
+		writeMsg(&handlerUsart1, "\n 6) device  -->  WHO I AM? \n");
+		writeMsg(&handlerUsart1, "\n 7) dataAdc  -->  Show the ADC data \n");
 		writeMsg(&handlerUsart1, "    Con este comando muestra dos arreglos de 256 datos c/u tomados con el ADC \n");
-		writeMsg(&handlerUsart1, "\n 7) stateAcc  -->  \n");
+		writeMsg(&handlerUsart1, "\n 8) stateAcc  -->  \n");
 		writeMsg(&handlerUsart1, "    Señor usuario, para usar los comandos del Accel primero debe resetear su configuración \n");
-		writeMsg(&handlerUsart1, "\n 8) resetAcc  -->  Resetea la configuración del Accel \n");
-		writeMsg(&handlerUsart1, "\n 9) capture  -->  Captura los datos tomados en el Accel y los guarda en un arreglo para cada eje \n ");
-		writeMsg(&handlerUsart1, "\n 10) sampleZ  -->  Comando que imprime una muestra de 50 datos tomados por el Accel \n");
-		writeMsg(&handlerUsart1, "\n 11) dataFFT  -->  Muestra la transformada rápida de Fourier de los datos tomados del Accel \n ");
+		writeMsg(&handlerUsart1, "\n 9) resetAcc  -->  Resetea la configuración del Accel \n");
+		writeMsg(&handlerUsart1, "\n 10) capture  -->  Captura los datos tomados en el Accel y los guarda en un arreglo para cada eje \n ");
+		writeMsg(&handlerUsart1, "\n 11) sampleZ  -->  Comando que imprime una muestra de 50 datos tomados por el Accel \n");
+		writeMsg(&handlerUsart1, "\n 12) dataFFT  -->  Muestra la transformada rápida de Fourier de los datos tomados del Accel \n ");
 
 	}
 
@@ -387,19 +389,29 @@ void parseCommands(char *ptrBufferReception){
 	else if(strcmp(cmd, "dataFFT") == 0){
 
 	}
+	else if(strcmp(cmd, "device") == 0){
+
+		sprintf(bufferData, "\nWHO_AM_I? (r)\n");
+		writeMsgTX(&handlerUsart1, bufferData);
+
+		i2cBuffer = i2c_readSingleRegister(&handlerAccelerometer, WHO_AM_I);
+		sprintf(bufferData, "\ndataRead = 0x%x \n", (unsigned int) i2cBuffer);
+		writeMsgTX(&handlerUsart1, bufferData);
+		rxData = '\0';
+	}
 	else if(strcmp(cmd, "stateAcc") == 0){
 
-		sprintf(bufferData, "PWR_MGMT_1 state (r)\n");
+		sprintf(bufferData, "\nPWR_MGMT_1 state (r)\n");
 		writeMsgTX(&handlerUsart1, bufferData);
 
 		i2cBuffer = i2c_readSingleRegister(&handlerAccelerometer, PWR_MGMT_1);
-		sprintf(bufferData, "dataRead = 0x%x \n", (unsigned int) i2cBuffer);
+		sprintf(bufferData, "\ndataRead = 0x%x \n", (unsigned int) i2cBuffer);
 		writeMsgTX(&handlerUsart1, bufferData);
 		rxData = '\0';
 		}
 	else if(strcmp(cmd, "resetAcc") == 0){
 
-		sprintf(bufferData, "PWR_MGMT_1 reset (w)\n");
+		sprintf(bufferData, "\nPWR_MGMT_1 reset (w)\n");
 		writeMsgTX(&handlerUsart1, bufferData);
 
 		i2c_writeSingleRegister(&handlerAccelerometer, PWR_MGMT_1, 0x00);
