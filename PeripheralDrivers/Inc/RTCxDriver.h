@@ -1,67 +1,44 @@
 /*
- * RTCxDriver.h
+ * RTCDriver.h
  *
- *  Created on: 7/6/23
- *  Author: Sentry
+ *  Created on: 8/6/2023
+ *      Author: Sentry
  */
 
-#ifndef RTCXDRIVER_H_
-#define RTCXDRIVER_H_
+#ifndef RTCDRIVER_H_
+#define RTCDRIVER_H_
 
-#include <stm32f4xx.h>
+#include "stm32f4xx.h"
 
-//#define TIME_NOTATION_AM		0
-//#define TIME_NOTATION_PM		1
+#define CLOCK_LSE 	0b01
+#define CLOCK_LSI 	0b10
+#define CLOCK_HSE 	0b11
+#define CLOCK_NONE 	0b00
 
-#define  TIME_FORMAT_24_HOUR	0
-#define  TIME_FORMAT_AM_PM		1
+#define MODE_24H	0
+#define MODE_12H	1
 
-#define MONDAY					1
-#define TUESDAY 				2
-#define WEDNESDAY				3
-#define THURSDAY				4
-#define FRIDAY					5
-#define SATURDAY				6
-#define SUNDAY					7
+#define MODE_AM  	0
+#define MODE_PM 	1
 
-#define JAN						1
-#define FEB						2
-#define MAR						3
-#define APR						4
-#define MAY						5
-#define JUN						6
-#define JUL						7
-#define AUG						8
-#define SEP						9
-#define OCT						10
-#define NOV						11
-#define DEC						12
-
-//Estructura de configuración para el RTC
-typedef struct{
-	uint16_t RTC_Hours; 			//Configuración de las horas
-	uint16_t RTC_Minutes; 			//Configuración de los minutos
-	uint16_t RTC_Seconds;			//Configuración de los segundos
-	uint16_t RTC_Year; 				//Configuración del año
-	uint16_t RTC_WeekDay; 			//Configuración del día de la semana
-	uint16_t RTC_TimeFormat; 		// Configuración del formato
-	uint16_t RTC_TimeNotation; 		//Configuración de la notación
-	uint16_t RTC_Month; 			//Configuración del mes
-	uint16_t RTC_ValueDay; 			//Configuración valor día
-
+//Definicion del RTC
+typedef struct
+{
+	uint8_t		FORMAT_NOTATION;	 	//Cual va a ser el formato en el que se va a presentar la hora formato de 24 horas o AM/PM
+	uint8_t 	FORMAT_AM_PM;			//Si se eligio el formato de 12 horas, en cual se esta en AM o PM
+	uint8_t		RTC_HOURS; 				//Las horas que se van a ingresar
+	uint8_t		RTC_MINUTS;				//Los minutos que se desean ingresar
+	uint8_t		RTC_SEC;				//Los segundos que se deasean ingresar
+	uint8_t 	RTC_DAYS;
+	uint8_t 	RTC_MONTH;
+	uint8_t 	RTC_YEARS;
 }RTC_Config_t;
 
-typedef struct{
-	RTC_TypeDef 	*ptrRTC; //Dirección
-	RTC_Config_t	RTC_Config; //Configuración
+//Prender el RTC
+void ConfigRTC(RTC_Config_t *ptrHandlerRTC);
+//Funcion para leer la hora
+uint8_t* read_time(void);
+//Funcion para leer la fecha
+uint8_t* read_date(void);
 
-}RTC_Handler_t;
-
-//Definición de funciones
-void RTC_Config(RTC_Handler_t *ptrRtcHandler);		//Configuración del RTC
-void *read_date(void); 								//Funcion para traer la fecha
-void config_Month(uint16_t Mes , char *Month_);				//Funcion config del mes
-void config_Week (uint16_t dia, char *Weekday_); 		//Funcion config del día de la semana
-
-
-#endif /* RTCXDRIVER_H_ */
+#endif /* RTCDRIVER_H_ */

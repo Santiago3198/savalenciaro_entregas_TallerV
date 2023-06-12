@@ -52,7 +52,7 @@ ADC_Config_t channel 						= {0};		//Handler de la configuración de los canales
 PWM_Handler_t handlerPWM 					= {0};		//Handler de la configuracióń del PWM para el ADC
 
 //Configuraicón RTC
-RTC_Handler_t handlerRTC					= {0};		//Handler de la configuración del RTC
+//RTC_Handler_t handlerRTC					= {0};		//Handler de la configuración del RTC
 
 //Definición de variables
 uint8_t rxData = 0;
@@ -208,7 +208,7 @@ void parseCommands(char *ptrBufferReception){
 		writeMsg(&handlerUsart1, "		4 --> div4 \n");
 		writeMsg(&handlerUsart1, "		5 --> div5 \n");
 		writeMsg(&handlerUsart1, "\n 5) frequency - Ingrese un caracter - Ingrese el valor de la velocidad \n");
-		writeMsg(&handlerUsart1, "    Ingrese un valor entre 1 y 100 para modificar la velocidad del muestreo \n" );
+		writeMsg(&handlerUsart1, "    Ingrese un valor entre 1 y 200 para modificar la velocidad del muestreo \n" );
 		writeMsg(&handlerUsart1, "\n 6) dataAdc  -->  Show the ADC data \n");
 		writeMsg(&handlerUsart1, "    Con este comando muestra dos arreglos de 256 datos c/u tomados con el ADC \n");
 		writeMsg(&handlerUsart1, "\n 7) stateAcc  -->  \n");
@@ -407,7 +407,7 @@ void parseCommands(char *ptrBufferReception){
 	}
 	else if(strcmp(cmd, "sampleZ") == 0){
 
-		for(uint16_t j = 0; j < 50; j++){
+		for(uint16_t j = 0; j < 10; j++){
 
 			sprintf(bufferData, "%d | %.2f \n", j+1, (float)arrayZ[j]*converFact);
 			writeMsgTX(&handlerUsart1, bufferData);
@@ -422,12 +422,12 @@ void parseCommands(char *ptrBufferReception){
 void initSystem(void){
 
 	//Configuración del Blinky
-	handlerBlinky.pGPIOx = GPIOH;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber = PIN_1;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEEDR_FAST;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerBlinky.pGPIOx 									= GPIOH;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber 			= PIN_1;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinMode 				= GPIO_MODE_OUT;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType 			= GPIO_OTYPE_PUSHPULL;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinSpeed 				= GPIO_OSPEEDR_FAST;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinPuPdControl 		= GPIO_PUPDR_NOTHING;
 	GPIO_Config(&handlerBlinky);
 
 	//Configuración del TIM2 (Blinky)
@@ -447,13 +447,13 @@ void initSystem(void){
 	BasicTimer_Config(&handlerTimerSamp);
 
 	//Configuración del MCO1
-	handlerMCO1.pGPIOx									= GPIOA;
-	handlerMCO1.GPIO_PinConfig.GPIO_PinNumber			= PIN_8;
-	handlerMCO1.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerMCO1.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
-	handlerMCO1.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_NOTHING;
-	handlerMCO1.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEEDR_FAST;
-	handlerMCO1.GPIO_PinConfig.GPIO_PinAltFunMode		= AF0;
+	handlerMCO1.pGPIOx										= GPIOA;
+	handlerMCO1.GPIO_PinConfig.GPIO_PinNumber				= PIN_8;
+	handlerMCO1.GPIO_PinConfig.GPIO_PinMode					= GPIO_MODE_ALTFN;
+	handlerMCO1.GPIO_PinConfig.GPIO_PinOPType				= GPIO_OTYPE_PUSHPULL;
+	handlerMCO1.GPIO_PinConfig.GPIO_PinPuPdControl			= GPIO_PUPDR_NOTHING;
+	handlerMCO1.GPIO_PinConfig.GPIO_PinSpeed				= GPIO_OSPEEDR_FAST;
+	handlerMCO1.GPIO_PinConfig.GPIO_PinAltFunMode			= AF0;
 	GPIO_Config(&handlerMCO1);
 
 	//Configuración comunicación I2C (ACCEL)
@@ -478,10 +478,10 @@ void initSystem(void){
 	GPIO_Config(&handlerI2cSCL);
 
 	//Configuraciòn I2C (ACCEL)
-	handlerAccelerometer.PLL_ON			= PLL_ENABLE;
-	handlerAccelerometer.ptrI2Cx		= I2C1;
-	handlerAccelerometer.slaveAddress	= ACCEL_ADDRESS;
-	handlerAccelerometer.modeI2C		= I2C_MODE_FM;
+	handlerAccelerometer.PLL_ON								= PLL_ENABLE;
+	handlerAccelerometer.ptrI2Cx							= I2C1;
+	handlerAccelerometer.slaveAddress						= ACCEL_ADDRESS;
+	handlerAccelerometer.modeI2C							= I2C_MODE_FM;
 	i2c_Config(&handlerAccelerometer);
 
 	//Configuración de pines para USART1
@@ -512,49 +512,39 @@ void initSystem(void){
 	USART_Config(&handlerUsart1);
 
 	//Configuración ADC
-	channel.numberOfChannels		= CHANNELS;
-	channel.multiChannel[0] 		= ADC_CHANNEL_1;
-	channel.multiChannel[1] 		= ADC_CHANNEL_4;
-	channel.multiSampling[0] 		= ADC_SAMPLING_PERIOD_84_CYCLES;
-	channel.multiSampling[1] 		= ADC_SAMPLING_PERIOD_84_CYCLES;
-	channel.dataAlignment 			= ADC_ALIGNMENT_RIGHT;
-	channel.resolution 				= ADC_RESOLUTION_12_BIT;
-	channel.eventType				= EXTERNAL_EVENT_ENABLE;
-	channel.AdcEvent				= 11;
+	channel.numberOfChannels								= CHANNELS;
+	channel.multiChannel[0] 								= ADC_CHANNEL_1;
+	channel.multiChannel[1] 								= ADC_CHANNEL_4;
+	channel.multiSampling[0] 								= ADC_SAMPLING_PERIOD_84_CYCLES;
+	channel.multiSampling[1] 								= ADC_SAMPLING_PERIOD_84_CYCLES;
+	channel.dataAlignment 									= ADC_ALIGNMENT_RIGHT;
+	channel.resolution 										= ADC_RESOLUTION_12_BIT;
+	channel.eventType										= EXTERNAL_EVENT_ENABLE;
+	channel.AdcEvent										= 11;
 	ADC_ConfigMultichannel(&channel, CHANNELS);
 
 	//Configuración del pin para el PWM
-	handlerPwmPin.pGPIOx 								= GPIOA;
-	handlerPwmPin.GPIO_PinConfig.GPIO_PinNumber 		= PIN_0;
-	handlerPwmPin.GPIO_PinConfig.GPIO_PinMode   		= GPIO_MODE_ALTFN;
-	handlerPwmPin.GPIO_PinConfig.GPIO_PinOPType 		= GPIO_OTYPE_PUSHPULL;
-	handlerPwmPin.GPIO_PinConfig.GPIO_PinPuPdControl 	= GPIO_PUPDR_NOTHING;
-	handlerPwmPin.GPIO_PinConfig.GPIO_PinSpeed  		= GPIO_OSPEEDR_FAST;
-	handlerPwmPin.GPIO_PinConfig.GPIO_PinAltFunMode 	= AF2;
+	handlerPwmPin.pGPIOx 									= GPIOA;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinNumber 			= PIN_0;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinMode   			= GPIO_MODE_ALTFN;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinOPType 			= GPIO_OTYPE_PUSHPULL;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinPuPdControl 		= GPIO_PUPDR_NOTHING;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinSpeed  			= GPIO_OSPEEDR_FAST;
+	handlerPwmPin.GPIO_PinConfig.GPIO_PinAltFunMode 		= AF2;
 	GPIO_Config(&handlerPwmPin);
 
 	//Configuración de la señal PWM
-	handlerPWM.ptrTIMx 				= TIM5;
-	handlerPWM.config.channel 		= PWM_CHANNEL_1;
-	handlerPWM.config.duttyCicle 	= duttyPwm;
-	handlerPWM.config.periodo 		= speed;			//2 ms -- 66
-	handlerPWM.config.prescaler 	= 100;				//Escala de 1us -- Escala de tiempo
+	handlerPWM.ptrTIMx 										= TIM5;
+	handlerPWM.config.channel 								= PWM_CHANNEL_1;
+	handlerPWM.config.duttyCicle 							= duttyPwm;
+	handlerPWM.config.periodo 								= speed;			//2 ms -- 66
+	handlerPWM.config.prescaler 							= 100;				//Escala de 1us -- Escala de tiempo
 	pwm_Config(&handlerPWM);
 
 	startPwmSignal(&handlerPWM);
 
 	//Se carga la configuración de las interrupciones
 	ADC_Channel_Interrupt(&channel);
-
-	//Configuración del RTC
-	handlerRTC.RTC_Config.RTC_Seconds 		= 1;
-	handlerRTC.RTC_Config.RTC_Minutes 		= 1;
-	handlerRTC.RTC_Config.RTC_Hours   		= 1;
-	handlerRTC.RTC_Config.RTC_WeekDay 		= MONDAY;
-	handlerRTC.RTC_Config.RTC_Month	  		= JAN;
-	handlerRTC.RTC_Config.RTC_Year	  		= 2023;
-	handlerRTC.RTC_Config.RTC_TimeFormat 	= TIME_FORMAT_24_HOUR;
-	RTC_Config(&handlerRTC);
 }
 
 void usart1Rx_Callback(void){
@@ -607,4 +597,3 @@ void adcComplete_Callback(void){
 		}
 	}
 }
-

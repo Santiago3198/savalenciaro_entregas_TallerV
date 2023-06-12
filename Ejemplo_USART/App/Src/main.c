@@ -153,7 +153,7 @@ void initSystem(void){
 	GPIO_Config(&handlerPinRX6);
 
 	usart1Comm.ptrUSARTx	 								= USART1;
-	usart1Comm.USART_Config.USART_baudrate					= USART_BAUDRATE_9600;
+	usart1Comm.USART_Config.USART_baudrate					= USART_BAUDRATE_115200;
 	usart1Comm.USART_Config.USART_datasize					= USART_DATASIZE_8BIT;
 	usart1Comm.USART_Config.USART_parity					= USART_PARITY_NONE;
 	usart1Comm.USART_Config.USART_stopbits					= USART_STOPBIT_1;
