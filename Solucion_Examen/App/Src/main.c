@@ -52,10 +52,11 @@ ADC_Config_t channel 						= {0};		//Handler de la configuración de los canales
 PWM_Handler_t handlerPWM 					= {0};		//Handler de la configuracióń del PWM para el ADC
 
 //Configuraicón RTC
-//RTC_Handler_t handlerRTC					= {0};		//Handler de la configuración del RTC
+RTC_Config_t handlerRTC						= {0};		//Handler de la configuración del RTC
 
 //Definición de variables
 uint8_t rxData = 0;
+char bufferDataRTC[64] = {0};
 
 //Variables relacionadas con la comunicación I2C del Accel
 uint8_t i2cBuffer = 0;
@@ -189,7 +190,7 @@ void parseCommands(char *ptrBufferReception){
 	 * integer llamados "firstParameter" y "secondParameter".
 	 * De esta forma, podemos introducir información al micro desde el puerto serial
 	 */
-	sscanf(ptrBufferReception, "%s %s %u", cmd, userMsg, &firstParameter);
+	sscanf(ptrBufferReception, "%s %s %u %u", cmd, userMsg, &firstParameter, &secondParameter);
 
 	//El primer comando imprime una lista  con los otros comandos que tiene el equipo
 	if(strcmp(cmd, "help") == 0){
@@ -219,6 +220,8 @@ void parseCommands(char *ptrBufferReception){
 		writeMsg(&handlerUsart1, "\n 10) capture  -->  Captura los datos tomados en el Accel y los guarda en un arreglo para cada eje \n ");
 		writeMsg(&handlerUsart1, "\n 11) sampleZ  -->  Comando que imprime una muestra de 50 datos tomados por el Accel \n");
 		writeMsg(&handlerUsart1, "\n 12) dataFFT  -->  Muestra la transformada rápida de Fourier de los datos tomados del Accel \n ");
+		writeMsg(&handlerUsart1, "\n 13) hora");
+		writeMsg(&handlerUsart1, "\n 14) show");
 
 	}
 
@@ -423,6 +426,64 @@ void parseCommands(char *ptrBufferReception){
 
 			sprintf(bufferData, "%d | %.2f \n", j+1, (float)arrayZ[j]*converFact);
 			writeMsgTX(&handlerUsart1, bufferData);
+		}
+	}
+	else if(strcmp(cmd, "hora") == 0){
+
+		//Se cargan los parámetros ingresados por el usuario
+		handlerRTC.hours = firstParameter;
+		handlerRTC.minuts = secondParameter;
+
+		//Configuración del formato de las horas
+		if(strcmp(userMsg, "24H") == 0){
+			handlerRTC.format = MODE_24H;
+		}
+		else if(strcmp(userMsg, "AM") == 0){
+			handlerRTC.format = MODE_12H;
+			handlerRTC.AM_PM = MODE_AM;
+		}
+		else if(strcmp(userMsg, "PM") == 0){
+			handlerRTC.format = MODE_12H;
+			handlerRTC.AM_PM = MODE_PM;
+		}
+		else{
+
+			//Mensaje de error
+			writeMsg(&handlerUsart1, "\nError!: Invalid input value\n");
+		}
+		RTC_Config(&handlerRTC);
+
+	}else if(strcmp(cmd, "show") == 0){
+
+		uint8_t secUni = 0;
+		uint8_t secDec = 0;
+		uint8_t minUni = 0;
+		uint8_t minDec = 0;
+		uint8_t horaUni = 0;
+		uint8_t horaDec = 0;
+		uint8_t AM_PM = 0;
+		uint8_t valueHora = 0;
+
+		secUni = read_time()[0];
+		secDec = read_time()[1];
+		minUni = read_time()[2];
+		minDec = read_time()[3];
+		horaUni = read_time()[4];
+		horaDec = read_time()[5];
+		AM_PM = read_time()[6];
+		valueHora = ((horaDec * 10) + horaUni);
+
+		if(AM_PM == 0){
+			sprintf(bufferDataRTC, "Hora: %u%u:%u%u:%u%u AM\n", horaDec, horaUni, minDec, minUni, secDec, secUni);
+			writeMsg(&handlerUsart1, bufferDataRTC);
+		}
+		else if(AM_PM == 1){
+			sprintf(bufferDataRTC, "Hora: %u%u:%u%u:%u%u PM\n", horaDec, horaUni, minDec, minUni, secDec, secUni);
+			writeMsg(&handlerUsart1, bufferDataRTC);
+		}
+		else{
+			sprintf(bufferDataRTC, "Hora: %u%u:%u%u:%u%u\n", horaDec, horaUni, minDec, minUni, secDec, secUni);
+			writeMsg(&handlerUsart1, bufferDataRTC);
 		}
 	}
 	else{

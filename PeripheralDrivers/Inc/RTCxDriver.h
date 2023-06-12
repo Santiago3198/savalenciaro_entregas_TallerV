@@ -24,21 +24,23 @@
 //Definicion del RTC
 typedef struct
 {
-	uint8_t		FORMAT_NOTATION;	 	//Cual va a ser el formato en el que se va a presentar la hora formato de 24 horas o AM/PM
-	uint8_t 	FORMAT_AM_PM;			//Si se eligio el formato de 12 horas, en cual se esta en AM o PM
-	uint8_t		RTC_HOURS; 				//Las horas que se van a ingresar
-	uint8_t		RTC_MINUTS;				//Los minutos que se desean ingresar
-	uint8_t		RTC_SEC;				//Los segundos que se deasean ingresar
-	uint8_t 	RTC_DAYS;
-	uint8_t 	RTC_MONTH;
-	uint8_t 	RTC_YEARS;
+	uint8_t		format;  //format;	 	//Cual va a ser el formato en el que se va a presentar la hora formato de 24 horas o AM/PM
+	uint8_t 	AM_PM;   //AM_PM;			//Si se eligio el formato de 12 horas, en cual se esta en AM o PM
+	uint8_t		hours;   //RTC_HOURS; 				//Las horas que se van a ingresar
+	uint8_t		minuts;  //RTC_MINUTS;				//Los minutos que se desean ingresar
+	uint8_t		seconds; //RTC_SEC;				//Los segundos que se deasean ingresar
+	uint8_t 	days;    //days;
+	uint8_t 	month;   //RTC_MONTH;
+	uint8_t 	year;    //year;
 }RTC_Config_t;
 
-//Prender el RTC
-void ConfigRTC(RTC_Config_t *ptrHandlerRTC);
+//Cargar la configuración del RTC
+void RTC_Config(RTC_Config_t *ptrHandlerRTC);
+
 //Funcion para leer la hora
 uint8_t* read_time(void);
+
 //Funcion para leer la fecha
 uint8_t* read_date(void);
 
-#endif /* RTCDRIVER_H_ */
+#endif
