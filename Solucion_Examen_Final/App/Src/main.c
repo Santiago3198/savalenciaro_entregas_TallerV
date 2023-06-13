@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 #include "stm32f4xx.h"
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
@@ -25,6 +26,8 @@
 #include "SysTickDriver.h"
 #include "AdcDriver.h"
 #include "RTCxDriver.h"
+
+#include "arm_math.h"
 
 //Definición de handlers GPIO
 GPIO_Handler_t handlerBlinky 				= {0};		//Handler Blinky
@@ -88,21 +91,30 @@ unsigned int secondParameter = 0;
 unsigned int thirdParameter = 0;
 
 //Definición de arreglos para guardar los muestreos del acelerómetro
-uint16_t arrayX[1024] = {0};
-uint16_t arrayY[1024] = {0};
-uint16_t arrayZ[1024] = {0};
+float32_t arrayZ[1024] = {0};
 uint8_t flagAcc = 0;
 float converFact = (1.9/32767.0)*(9.8);			//Factor de conversión para los datos del accel
+
+//Variables para la FFT
+#define ACCEL_DATA_SIZE		1024
+float32_t accelSignal[ACCEL_DATA_SIZE];
+float32_t transformedSignal[ACCEL_DATA_SIZE];
+float32_t readyFFT[ACCEL_DATA_SIZE];
+float32_t maxVal = 0;
+float32_t frequencyFFT = 0;
+uint16_t indxFFT = 0;
+char bufferFFT[128] = {0};
+
+uint32_t ifftFlag = 0;
+arm_rfft_fast_instance_f32 config_Rfft_fast_f32;
+arm_cfft_radix4_instance_f32 configRadix4_f32;
+arm_status statusInitFFT = ARM_MATH_ARGUMENT_ERROR;
 
 //Definición número de canales para usar el ADC
 #define CHANNELS   2
 
 //Definiciones para comunicación I2C (ACCEL)
 #define ACCEL_ADDRESS 	0b1101001;		//ID Device
-#define ACCEL_XOUT_H	59 				//0x3B
-#define ACCEL_XOUT_L 	60 				//0x3C
-#define ACCEL_YOUT_H	61				//0x3D
-#define ACCEL_YOUT_L	62 				//0x3E
 #define ACCEL_ZOUT_H	63				//0x3F
 #define ACCEL_ZOUT_L	64				//0x40
 
@@ -112,8 +124,6 @@ float converFact = (1.9/32767.0)*(9.8);			//Factor de conversión para los datos
 //Definición de funciones
 void initSystem(void);
 void configPLL(void);
-void saveAccX(void);
-void saveAccY(void);
 void saveAccZ(void);
 void parseCommands(char *ptrBufferReception);
 void ADC_ConfigMultichannel(ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
@@ -145,8 +155,7 @@ int main(void){
 			bufferReception[counterReception] = rxData;
 			counterReception++;
 
-			//if the incoming character is a newline, set a flag
-			//so the main loop can do something about it:
+			//Se define el siguiente caracter para indicar que el string está completo
 			if(rxData == '@'){
 
 				stringComplete = true;
@@ -212,9 +221,9 @@ void parseCommands(char *ptrBufferReception){
 		writeMsg(&handlerUsart1, "		5 --> div5 \n");
 		writeMsg(&handlerUsart1, "\n 5) frequency - Ingrese un caracter - Ingrese el valor de la velocidad \n");
 		writeMsg(&handlerUsart1, "    Ingrese un valor entre 1 y 200 para modificar la velocidad del muestreo \n" );
-		writeMsg(&handlerUsart1, "\n 6) device  -->  WHO I AM? \n");
-		writeMsg(&handlerUsart1, "\n 7) dataAdc  -->  Show the ADC data \n");
+		writeMsg(&handlerUsart1, "\n 6) dataAdc  -->  Show the ADC data \n");
 		writeMsg(&handlerUsart1, "    Con este comando muestra dos arreglos de 256 datos c/u tomados con el ADC \n");
+		writeMsg(&handlerUsart1, "\n 7) device  -->  WHO I AM? \n");
 		writeMsg(&handlerUsart1, "\n 8) stateAcc  -->  \n");
 		writeMsg(&handlerUsart1, "    Señor usuario, para usar los comandos del Accel primero debe resetear su configuración \n");
 		writeMsg(&handlerUsart1, "\n 9) resetAcc  -->  Resetea la configuración del Accel \n");
@@ -222,8 +231,9 @@ void parseCommands(char *ptrBufferReception){
 		writeMsg(&handlerUsart1, "\n 11) sampleZ  -->  Comando que imprime una muestra de 50 datos tomados por el Accel \n");
 		writeMsg(&handlerUsart1, "\n 12) dataFFT  -->  Muestra la transformada rápida de Fourier de los datos tomados del Accel \n ");
 		writeMsg(&handlerUsart1, "\n 13) hour - Formato de hora - Horas - Minutos  -->  Comando para configurar la hora \n");
-		writeMsg(&handlerUsart1, "\n 14) date");
-		writeMsg(&handlerUsart1, "\n 15) show  -->  Con este comando podrá ver la hora y fechas ingresada con el comando número 13 y 14 \n");
+		writeMsg(&handlerUsart1, "\n 14) date - Ingrese un caracter - Día - Mes - Año  -->  Comando para configurar la fecha \n");
+		writeMsg(&handlerUsart1, "\n 15) showHour  -->  Con este comando podrá ver la hora ingresada con el comando número 13 \n");
+		writeMsg(&handlerUsart1, "\n 16) showDate  -->  Con este comando podrá ver la fecha ingresada con el comando número 14 \n");
 	}
 
 	//El comando usermsg sirve para entender como funciona la recepcion de strings enviados desde consola
@@ -354,6 +364,8 @@ void parseCommands(char *ptrBufferReception){
 			//Se llaman las funciones para actualizar el dutty y la frecuencia
 			updateFrequency(&handlerPWM, speed);
 			updateDuttyCycle(&handlerPWM, duttyPwm);
+
+			writeMsg(&handlerUsart1, "\nFrecuencia de muestreo configurada correctamente \n");
 		}
 		else{
 
@@ -375,10 +387,8 @@ void parseCommands(char *ptrBufferReception){
 				sprintf(bufferDataAdc, "CH1 = %.2f ; CH2 = %.2f; \n", dataCh1[i]*3.3f/4095.f, dataCh2[i]*3.3f/4095.f);
 				writeMsg(&handlerUsart1, bufferDataAdc);
 			}
-
 		rxData = '\0';
 	}
-
 	//Guarda los datos del accel en un arreglo para cada eje
 	else if(strcmp(cmd, "capture") == 0){
 
@@ -388,13 +398,59 @@ void parseCommands(char *ptrBufferReception){
 		//Levantamos la bandera para indicar que se deben almacenar los datos
 		saveDataAccFlag = 1;
 	}
-
 	//Presenta los datos de las frecuencias de los datos del Accel
 	else if(strcmp(cmd, "dataFFT") == 0){
 
+		//Inicialización de las funciones
+		statusInitFFT = arm_rfft_fast_init_f32(&config_Rfft_fast_f32, 1024);
+
+		if(statusInitFFT == ARM_MATH_SUCCESS){
+
+			sprintf(bufferFFT, "\nInicialización completada! \n");
+			writeMsg(&handlerUsart1, bufferFFT);
+		}
+
+		sprintf(bufferFFT, "\nGuardando datos... \n");
+		writeMsg(&handlerUsart1, bufferFFT);
+
+		saveAccZ();
+
+		sprintf(bufferFFT, "\nIniciando FFT... \n");
+		writeMsg(&handlerUsart1, bufferFFT);
+
+		//Si la inicizalización está completa se procede a poner el arreglo dentro de la función FFT
+		if(statusInitFFT == ARM_MATH_SUCCESS){
+
+			arm_rfft_fast_f32(&config_Rfft_fast_f32, arrayZ, transformedSignal, ifftFlag);
+			arm_abs_f32(transformedSignal, accelSignal, 1024);
+
+			//Se transforma cada uno de los datos del arreglo
+			for(int i = 0; i < 1024; i++){
+				if(i%2){
+					readyFFT[i] = accelSignal[i];
+				}
+			}
+		}
+
+		//Cuando todos los datos están listos, se reinicia el contador para volver a empezar
+		maxVal = readyFFT[0];
+		for(int j = 0; j < 1024; j++){
+			if(maxVal < readyFFT[j]){
+				maxVal = readyFFT[j];
+				indxFFT = j;
+			}
+		}
+		sprintf(bufferFFT, "\nÍndice de la frecuencia fundamental: %u \n", indxFFT);
+		writeMsg(&handlerUsart1, bufferFFT);
+
+		frequencyFFT = (indxFFT*200/(1024));
+
+		sprintf(bufferFFT, "Frecuencia = %#.4f Hz \n", frequencyFFT);
+		writeMsg(&handlerUsart1, bufferFFT);
 	}
 	else if(strcmp(cmd, "device") == 0){
 
+		//Se lee el dispositivo para realizar la comunicación
 		sprintf(bufferData, "\nWHO_AM_I? (r)\n");
 		writeMsgTX(&handlerUsart1, bufferData);
 
@@ -412,9 +468,10 @@ void parseCommands(char *ptrBufferReception){
 		sprintf(bufferData, "\ndataRead = 0x%x \n", (unsigned int) i2cBuffer);
 		writeMsgTX(&handlerUsart1, bufferData);
 		rxData = '\0';
-		}
+	}
 	else if(strcmp(cmd, "resetAcc") == 0){
 
+		//Se reinicia la configuración del accel
 		sprintf(bufferData, "\nPWR_MGMT_1 reset (w)\n");
 		writeMsgTX(&handlerUsart1, bufferData);
 
@@ -423,6 +480,7 @@ void parseCommands(char *ptrBufferReception){
 	}
 	else if(strcmp(cmd, "sampleZ") == 0){
 
+		//Se realiza una pequeña toma de datos para verificar
 		for(uint16_t j = 0; j < 10; j++){
 
 			sprintf(bufferData, "%d | %.2f \n", j+1, (float)arrayZ[j]*converFact);
