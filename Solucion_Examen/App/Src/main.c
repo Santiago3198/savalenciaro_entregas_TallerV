@@ -85,6 +85,7 @@ char bufferReception[256] = {0};
 uint16_t counterReception = 0;
 unsigned int firstParameter = 0;
 unsigned int secondParameter = 0;
+unsigned int thirdParameter = 0;
 
 //Definición de arreglos para guardar los muestreos del acelerómetro
 uint16_t arrayX[1024] = {0};
@@ -190,7 +191,7 @@ void parseCommands(char *ptrBufferReception){
 	 * integer llamados "firstParameter" y "secondParameter".
 	 * De esta forma, podemos introducir información al micro desde el puerto serial
 	 */
-	sscanf(ptrBufferReception, "%s %s %u %u", cmd, userMsg, &firstParameter, &secondParameter);
+	sscanf(ptrBufferReception, "%s %s %u %u %u", cmd, userMsg, &firstParameter, &secondParameter, &thirdParameter);
 
 	//El primer comando imprime una lista  con los otros comandos que tiene el equipo
 	if(strcmp(cmd, "help") == 0){
@@ -220,9 +221,9 @@ void parseCommands(char *ptrBufferReception){
 		writeMsg(&handlerUsart1, "\n 10) capture  -->  Captura los datos tomados en el Accel y los guarda en un arreglo para cada eje \n ");
 		writeMsg(&handlerUsart1, "\n 11) sampleZ  -->  Comando que imprime una muestra de 50 datos tomados por el Accel \n");
 		writeMsg(&handlerUsart1, "\n 12) dataFFT  -->  Muestra la transformada rápida de Fourier de los datos tomados del Accel \n ");
-		writeMsg(&handlerUsart1, "\n 13) hora");
-		writeMsg(&handlerUsart1, "\n 14) show");
-
+		writeMsg(&handlerUsart1, "\n 13) hour - Formato de hora - Horas - Minutos  -->  Comando para configurar la hora \n");
+		writeMsg(&handlerUsart1, "\n 14) date");
+		writeMsg(&handlerUsart1, "\n 15) show  -->  Con este comando podrá ver la hora y fechas ingresada con el comando número 13 y 14 \n");
 	}
 
 	//El comando usermsg sirve para entender como funciona la recepcion de strings enviados desde consola
@@ -428,7 +429,7 @@ void parseCommands(char *ptrBufferReception){
 			writeMsgTX(&handlerUsart1, bufferData);
 		}
 	}
-	else if(strcmp(cmd, "hora") == 0){
+	else if(strcmp(cmd, "hour") == 0){
 
 		//Se cargan los parámetros ingresados por el usuario
 		if(handlerRTC.format == MODE_24H){
@@ -458,6 +459,7 @@ void parseCommands(char *ptrBufferReception){
 				handlerRTC.minuts = secondParameter;
 			}
 			else{
+				//Mensaje de error
 				writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
 			}
 		}
@@ -475,13 +477,33 @@ void parseCommands(char *ptrBufferReception){
 			handlerRTC.AM_PM = MODE_PM;
 		}
 		else{
-
 			//Mensaje de error
 			writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
 		}
 		RTC_Config(&handlerRTC);
+	}
+	else if(strcmp(cmd, "date") == 0){
 
-	}else if(strcmp(cmd, "show") == 0){
+		if((firstParameter >= 1) && (firstParameter <=30)){
+			handlerRTC.days = firstParameter;
+		}
+		else{
+			//Mensaje de error
+			writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
+		}
+		if((secondParameter >= 1) && (secondParameter <=12)){
+			handlerRTC.month = secondParameter;
+		}
+		else{
+			//Mensaje de error
+			writeMsg(&handlerUsart1, "\nError!: Invalid input \n");
+		}
+
+		handlerRTC.year = thirdParameter;
+		//Se carga la configuración
+		RTC_Config(&handlerRTC);
+	}
+	else if(strcmp(cmd, "showHour") == 0){
 
 		uint8_t secUni = 0;
 		uint8_t secDec = 0;
@@ -500,17 +522,36 @@ void parseCommands(char *ptrBufferReception){
 		AM_PM = read_time()[6];
 
 		if(AM_PM == 0){
-			sprintf(bufferDataRTC, "Hora: %u%u:%u%u:%u%u AM\n", horaDec, horaUni, minDec, minUni, secDec, secUni);
+			sprintf(bufferDataRTC, "\nHora: %u%u:%u%u:%u%u AM \n", horaDec, horaUni, minDec, minUni, secDec, secUni);
 			writeMsg(&handlerUsart1, bufferDataRTC);
 		}
 		else if(AM_PM == 1){
-			sprintf(bufferDataRTC, "Hora: %u%u:%u%u:%u%u PM\n", horaDec, horaUni, minDec, minUni, secDec, secUni);
+			sprintf(bufferDataRTC, "\nHora: %u%u:%u%u:%u%u PM \n", horaDec, horaUni, minDec, minUni, secDec, secUni);
 			writeMsg(&handlerUsart1, bufferDataRTC);
 		}
 		else{
-			sprintf(bufferDataRTC, "Hora: %u%u:%u%u:%u%u\n", horaDec, horaUni, minDec, minUni, secDec, secUni);
+			sprintf(bufferDataRTC, "\nHora: %u%u:%u%u:%u%u \n", horaDec, horaUni, minDec, minUni, secDec, secUni);
 			writeMsg(&handlerUsart1, bufferDataRTC);
 		}
+	}
+	else if(strcmp(cmd, "showDate") == 0){
+
+		uint8_t daysUni = 0;
+		uint8_t daysDec = 0;
+		uint8_t _month = 0;
+		uint8_t yearUni = 0;
+		uint8_t yearDec = 0;
+
+		daysUni = read_date()[0];
+		daysDec = read_date()[1];
+		_month = read_date()[2];
+		yearUni = read_date()[3];
+		yearDec = read_date()[4];
+
+		unsigned int yearValue = 2000 + (yearDec*10) + yearUni;
+
+		sprintf(bufferDataRTC, "\nFecha: %u%u-%u-%u \n", daysDec, daysUni, _month, yearValue);
+		writeMsg(&handlerUsart1, bufferDataRTC);
 	}
 	else{
 		//Se imprime el mensaje "Wrong CMD" si la escritura no corresponde a los CMD implementados
