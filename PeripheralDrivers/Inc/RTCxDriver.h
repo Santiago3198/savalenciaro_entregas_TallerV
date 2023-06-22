@@ -5,15 +5,10 @@
  *      Author: Sentry
  */
 
-#ifndef RTCDRIVER_H_
-#define RTCDRIVER_H_
+#ifndef RTCxDRIVER_H_
+#define RTCxDRIVER_H_
 
 #include "stm32f4xx.h"
-
-#define CLOCK_LSE 	0b01
-#define CLOCK_LSI 	0b10
-#define CLOCK_HSE 	0b11
-#define CLOCK_NONE 	0b00
 
 #define MODE_24H	0
 #define MODE_12H	1
