@@ -48,8 +48,6 @@ uint8_t rxData = 0;
 
 //Variables relacionadas con la comunicación I2C del Accel
 uint8_t i2cBuffer = 0;
-uint16_t indx = 0;
-uint8_t saveDataAccFlag = 0;
 char bufferData[64] = "Module GY-88";
 
 //Variables relacionadas con el uso de los comandos en terminal
@@ -58,17 +56,22 @@ uint16_t counterReception = 0;
 char cmd[256] = {0};
 char userMsg[256] = {0};
 char bufferReception[256] = {0};
-unsigned int firstParameter = 0;
-unsigned int secondParameter = 0;
-unsigned int thirdParameter = 0;
 
-float converFact = (2/32767.0)*(9.8);			//Factor de conversión para los datos del accel
+//Deifiniciones y variables del accel
+float converFact = ((2/32767.0)*(9.8))+(0.3);			//Factor de conversión para los datos del accel
+int16_t AccelX = 0;
+int16_t AccelY = 0;
+int16_t AccelZ = 0;
+int16_t GyrX = 0;
+int16_t GyrY = 0;
+int16_t GyrZ = 0;
 
 long Press = 0;
 long Temp = 0;
-long Altitude = 0;
-long p0 = 1013.25;
-long expo = 1/5.255;
+float Altitude = 0;
+float p0 = 1013.25;
+float expo = 1/(5.255);
+float factor = 0;
 
 //Deficiniones para Barómetro
 //Definiciones de constantes de calibración
@@ -126,7 +129,12 @@ long p = 0;
 
 //Definición de funciones
 void initSystem(void);
+void MPU6050(void);
 void BMP085(void);
+void calibrationDataBar(void);
+void calibrationDataAcc(void);
+long getTemp(void);
+long getPress(void);
 void parseCommands(char *ptrBufferReception);
 
 int main(void){
@@ -140,8 +148,21 @@ int main(void){
 
 	initSystem();
 
+	/* Como la válvula es normalmente abierta, se requiere que inmediatamente
+	 * el sistema inicie la válvula se cierre para que sea posible la conexión con
+	 * el tanque de combustible
+	 */
+	GPIO_WritePin(&handlerValvePin, SET);
+
+	/* Se imprimen los mensajes de inicio para dar info al usuario
+	 * sobre el manejo del dispositivo
+	 */
+
 	writeMsg(&handlerUsart1, "\n~Iniciando Sistema~\n");
-	GPIO_WritePin(&handlerValvePin, RESET);
+	writeMsg(&handlerUsart1, "\n startAcc  -->  Calibración del Accel-Gyro \n");
+	writeMsg(&handlerUsart1, "\n showData  -->  Presenta los datos actuales capturados por los sensores \n");
+	writeMsg(&handlerUsart1, "\n valve  -->  Alto o bajo para cerrar o abrir la valvula de combustible \n");
+
 
 	/*Loop forever*/
 	while(1){
@@ -179,146 +200,83 @@ int main(void){
 
 void parseCommands(char *ptrBufferReception){
 
-	/* Esta funcion de C lee la cadena de caracteres a la que apunta el "ptr"
-	 * y almacena en tres elementos diferentes: un string llamado "cmd" y dos números
-	 * integer llamados "firstParameter" y "secondParameter".
-	 * De esta forma, podemos introducir información al micro desde el puerto serial
-	 */
-	sscanf(ptrBufferReception, "%s %s %u %u %u", cmd, userMsg, &firstParameter, &secondParameter, &thirdParameter);
+	sscanf(ptrBufferReception, "%s %s", cmd, userMsg);
 
-	//El primer comando imprime una lista  con los otros comandos que tiene el equipo
-	if(strcmp(cmd, "help") == 0){
+	if(strcmp(cmd, "startAcc") == 0){
 
-		writeMsg(&handlerUsart1, "\n Help Menu CMDs: \n");
-		writeMsg(&handlerUsart1, "\n Por favor ingrese un comando seguido de los parametros a modificar separados por espacios \n");
-		writeMsg(&handlerUsart1, "\n 1) help   -->   Menu de ayuda \n");
-		writeMsg(&handlerUsart1, "\n 2) device  -->  WHO I AM? \n");
-		writeMsg(&handlerUsart1, "\n 3) stateAcc  -->  Carga el estado del Accel \n");
-		writeMsg(&handlerUsart1, "\n 4) resetAcc  -->  Resetea la configuracion del Accel \n");
-		writeMsg(&handlerUsart1, "\n 5) calibrateAcc  -->  Calibración del Accel-Gyro \n");
-		writeMsg(&handlerUsart1, "\n 6) showAcc  -->  Presenta los datos actuales capturados por el acelerómetro \n");
-		writeMsg(&handlerUsart1, "\n 7) showBar  -->  Presenta los datos actuales capturados por el barómetro \n");
-		writeMsg(&handlerUsart1, "\n 8) valve  -->  Alto o bajo para cerrar o abrir la valvula de combustible \n");
+		//Inicialización del MPU6050
+		MPU6050();
 	}
-	else if(strcmp(cmd, "device") == 0){
+	else if(strcmp(cmd, "showData") == 0){
 
-		//Se lee el dispositivo para realizar la comunicación
-		sprintf(bufferData, "\nWHO_AM_I? (r)\n");
-		writeMsgTX(&handlerUsart1, bufferData);
+		//Se cargan los datos de calibración correspondientes al Accel
+		calibrationDataAcc();
 
-		i2cBuffer = i2c_readSingleRegister(&handlerAccelerometer, WHO_AM_I);
-		sprintf(bufferData, "\ndataRead = 0x%x \n", (unsigned int) i2cBuffer);
-		writeMsgTX(&handlerUsart1, bufferData);
+		/* Se cargan los datos de calibración y cálculos realizados para la toma y
+		 * muestra de datos del Bar
+		 */
+		BMP085();
+
+		/* Se calcula la altura (que posteriormente se mostrará) según el valor de
+		 * la presión atmosférica medida ppor el Bar
+		 */
+		//		factor = (1-((Press/(long)p0)^expo));
+				Altitude = 44330 * factor;
+
+		/* Presentación de los datos correspondientes a aceleración, ángulo de rotación,
+		 * presión atmosférica, temperatura y altura del dispositivo
+		 */
+		//Accel X
+		sprintf(bufferData, "\nLa aceleración en X es: %.2f m/s² \n", (float)AccelX*converFact);
+		writeMsg(&handlerUsart1, bufferData);
+
+		//Accel Y
+		sprintf(bufferData, "\nLa aceleración en Y es: %.2f m/s² \n", (float)AccelY*converFact);
+		writeMsg(&handlerUsart1, bufferData);
+
+		//Accel Z
+		sprintf(bufferData, "\nLa aceleración en Z es: %.2f m/s² \n", (float)AccelZ*converFact);
+		writeMsg(&handlerUsart1, bufferData);
+
+		//Gyro X
+		sprintf(bufferData, "\nEl ángulo en X es: %.2f ° \n", (float)GyrX);
+		writeMsg(&handlerUsart1, bufferData);
+
+		//Gyro Y
+		sprintf(bufferData, "\nEl ángulo en Y es: %.2f ° \n", (float)GyrY);
+		writeMsg(&handlerUsart1, bufferData);
+
+		//Gyro Z
+		sprintf(bufferData, "\nEl ángulo en Z es: %.2f °\n", (float)GyrZ);
+		writeMsg(&handlerUsart1, bufferData);
+
+		//Presión
+		sprintf(bufferData, "\nLa presión es: %.2f hPa \n", (float)Press);
+		writeMsg(&handlerUsart1, bufferData);
+
+		//Temperatura
+		sprintf(bufferData, "\nLa temperatura es: %.2f °C \n", (float)Temp);
+		writeMsg(&handlerUsart1, bufferData);
+
+		//Altura
+		sprintf(bufferData, "\nLa altura es: %.2f m \n", (float)Altitude);
+		writeMsg(&handlerUsart1, bufferData);
 		rxData = '\0';
-	}
-	else if(strcmp(cmd, "stateAcc") == 0){
-
-		sprintf(bufferData, "\nPWR_MGMT_1 state (r)\n");
-		writeMsgTX(&handlerUsart1, bufferData);
-
-		i2cBuffer = i2c_readSingleRegister(&handlerAccelerometer, PWR_MGMT_1);
-		sprintf(bufferData, "\ndataRead = 0x%x \n", (unsigned int) i2cBuffer);
-		writeMsgTX(&handlerUsart1, bufferData);
-		rxData = '\0';
-	}
-	else if(strcmp(cmd, "resetAcc") == 0){
-
-		//Se reinicia la configuración del accel
-		sprintf(bufferData, "\nPWR_MGMT_1 reset (w)\n");
-		writeMsgTX(&handlerUsart1, bufferData);
-
-		i2c_writeSingleRegister(&handlerAccelerometer, PWR_MGMT_1, 0x00);
-		rxData = '\0';
-	}
-	else if(strcmp(cmd, "calibrateAcc") == 0){
-
-		//Se escriben los registros de calibración para el Accel
-		//Se reinician las rutas de las señales del Accel y el Gyro
-		i2c_writeSingleRegister(&handlerAccelerometer, 0x68, 0b11 << 1);
-
-		//Se selecciona el modo de ultra alta resolución para el Accel
-		i2c_writeSingleRegister(&handlerAccelerometer, 0x1C, 0b00 << 4);
-
-		//Se selecciona el modo de ultra alta resolución para el Gyro
-		i2c_writeSingleRegister(&handlerAccelerometer, 0x1B, 0b00 << 4);
-
-		//Desactivamos el sensor de temperatura integrado en el MPU6050
-		i2c_writeSingleRegister(&handlerAccelerometer, 0x6B, 0b01 << 3);
-
-		writeMsg(&handlerUsart1, "\nAccel calibrado correctamente \n");
-	}
+		}
 	else if(strcmp(cmd, "valve") == 0){
 
 		//Se cambia el estado el estado del pin
 		GPIOxTooglePin(&handlerValvePin);
 
 		if(GPIO_ReadPin(&handlerValvePin) == 1){
-			writeMsg(&handlerUsart1, "\nVálvula abierta \n");
-		}
-		else{
 			writeMsg(&handlerUsart1, "\nVálvula cerrada \n");
 		}
+		else{
+			writeMsg(&handlerUsart1, "\nVálvula abierta \n");
+		}
 	}
-	else if(strcmp(cmd, "showAcc") == 0){
-
-		uint8_t AccelX_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_L);
-		uint8_t AccelX_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_H);
-		int16_t AccelX = AccelX_high << 8 | AccelX_low;
-
-		uint8_t AccelY_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_L);
-		uint8_t AccelY_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_H);
-		int16_t AccelY = AccelY_high << 8 | AccelY_low;
-
-		uint8_t AccelZ_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_L);
-		uint8_t AccelZ_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_H);
-		int16_t AccelZ = AccelZ_high << 8 | AccelZ_low;
-
-		uint8_t GyrX_low = i2c_readSingleRegister(&handlerAccelerometer, GYRO_XOUT_L);
-		uint8_t GyrX_high = i2c_readSingleRegister(&handlerAccelerometer, GYRO_XOUT_H);
-		int16_t GyrX = GyrX_high << 8 | GyrX_low;
-
-		uint8_t GyrY_low = i2c_readSingleRegister(&handlerAccelerometer, GYRO_YOUT_L);
-		uint8_t GyrY_high = i2c_readSingleRegister(&handlerAccelerometer, GYRO_YOUT_H);
-		int16_t GyrY = GyrY_high << 8 | GyrY_low;
-
-		uint8_t GyrZ_low = i2c_readSingleRegister(&handlerAccelerometer, GYRO_ZOUT_L);
-		uint8_t GyrZ_high = i2c_readSingleRegister(&handlerAccelerometer, GYRO_ZOUT_H);
-		int16_t GyrZ = GyrZ_high << 8 | GyrZ_low;
-
-		sprintf(bufferData, "\nLa aceleración en X es: %.2f m/s² \n", (float)AccelX*converFact);
-		writeMsg(&handlerUsart1, bufferData);
-
-		sprintf(bufferData, "\nLa aceleración en Y es: %.2f m/s² \n", (float)AccelY*converFact);
-		writeMsg(&handlerUsart1, bufferData);
-
-		sprintf(bufferData, "\nLa aceleración en Z es: %.2f m/s² \n", (float)AccelZ*converFact);
-		writeMsg(&handlerUsart1, bufferData);
-
-		sprintf(bufferData, "\nEl ángulo en X es: %.2f \n", (float)GyrX);
-		writeMsg(&handlerUsart1, bufferData);
-
-		sprintf(bufferData, "\nEl ángulo en Y es: %.2f \n", (float)GyrY);
-		writeMsg(&handlerUsart1, bufferData);
-
-		sprintf(bufferData, "\nEl ángulo en Z es: %.2f \n", (float)GyrZ);
-		writeMsg(&handlerUsart1, bufferData);
-		rxData = '\0';
-	}
-	else if(strcmp(cmd, "showBar") == 0){
-
-		BMP085();
-
-		Altitude = 44330 * (1-((p/p0)^expo));
-
-		sprintf(bufferData, "\nLa presión es: %.2f \n", (float)Press);
-		writeMsg(&handlerUsart1, bufferData);
-
-		sprintf(bufferData, "\nLa temperatura es: %.2f \n", (float)Temp);
-		writeMsg(&handlerUsart1, bufferData);
-
-		sprintf(bufferData, "\nLa altura es: %.2f \n", (float)Altitude);
-		writeMsg(&handlerUsart1, bufferData);
-		rxData = '\0';
+	else{
+		writeMsg(&handlerUsart1, "\nError!: Wrong command \n");
 	}
 }
 
@@ -419,22 +377,11 @@ void BMP085(void){
 	//Se configura el SysTick en 16 MHz
 	config_SysTick_ms(0);
 
-	//Guardar en variables el valor que hay en cada registro para los datos de calibración
-	AC1 = i2c_readSingleRegister(&handlerBarometer, 0xAA);
-	AC2 = i2c_readSingleRegister(&handlerBarometer, 0xAC);
-	AC3 = i2c_readSingleRegister(&handlerBarometer, 0xAE);
-	AC4 = i2c_readSingleRegister(&handlerBarometer, 0xB0);
-	AC5 = i2c_readSingleRegister(&handlerBarometer, 0xB2);
-	AC6 = i2c_readSingleRegister(&handlerBarometer, 0xB4);
-	B1 = i2c_readSingleRegister(&handlerBarometer, 0xB6);
-	B2 = i2c_readSingleRegister(&handlerBarometer, 0xB8);
-	MB = i2c_readSingleRegister(&handlerBarometer, 0xBA);
-	MC = i2c_readSingleRegister(&handlerBarometer, 0xBC);
-	MD = i2c_readSingleRegister(&handlerBarometer, 0xBE);
+	//Guardar el valor que hay en cada registro para los datos de calibración
+	calibrationDataBar();
 
 	/* Leer el valor de la temperatura no compensado
 	 */
-
 	i2c_writeSingleRegister(&handlerBarometer, 0xF4, 0x2E);
 
 	//Tiempo de espera para reescribir el registro
@@ -447,29 +394,175 @@ void BMP085(void){
 
 	/* Leer el valor de la presión no compensado
 	 */
-
-	//Se configura par que tome las medidas en ultra alta resolución
 	i2c_writeSingleRegister(&handlerBarometer, 0xF4, 0x34+(oss<<6));
 
 	//Tiempo de espera para reescribir el registro
 	delay_ms(5);
 
-	//Se guarda el valor en la variable de la temperatura
+	//Se guarda el valor en la variable de la presión
 	uint8_t Press_low = i2c_readSingleRegister(&handlerBarometer, 0xF7);
 	uint8_t Press_high = i2c_readSingleRegister(&handlerBarometer, 0xF6);
 	uint8_t Press_Xlow = i2c_readSingleRegister(&handlerBarometer, 0xF8);
 	UP = ((Press_high<<16) + (Press_low<<8) + Press_Xlow) >> (8-oss);
 
 	//Calcular la temperatura real con los datos de calibración
+    getTemp();
+
+	//Guardamos el valor de la temperatura para posteriormente leerlo
+	Temp = getTemp();
+
+	//Calcular la presión real con los datos de calibración
+	getPress();
+
+	//Guardamos el valor de la presión para posteriormente leerlo
+	Press = getPress();
+}
+
+void MPU6050(void){
+
+	//Se lee el dispositivo para realizar la comunicación
+	sprintf(bufferData, "\nWHO_AM_I? (r)\n");
+	writeMsgTX(&handlerUsart1, bufferData);
+
+	i2cBuffer = i2c_readSingleRegister(&handlerAccelerometer, WHO_AM_I);
+	sprintf(bufferData, "\ndataRead = 0x%x \n", (unsigned int) i2cBuffer);
+	writeMsgTX(&handlerUsart1, bufferData);
+	rxData = '\0';
+
+	//Estado por defecto del Accel
+	sprintf(bufferData, "\nPWR_MGMT_1 state (r)\n");
+	writeMsgTX(&handlerUsart1, bufferData);
+
+	i2cBuffer = i2c_readSingleRegister(&handlerAccelerometer, PWR_MGMT_1);
+	sprintf(bufferData, "\ndataRead = 0x%x \n", (unsigned int) i2cBuffer);
+	writeMsgTX(&handlerUsart1, bufferData);
+	rxData = '\0';
+
+	//Se escriben los registros de calibración para el Accel
+	//Se reinician las rutas de las señales del Accel y el Gyro
+	i2c_writeSingleRegister(&handlerAccelerometer, 0x68, 0b11 << 1);
+
+	//Se selecciona el modo de ultra alta resolución para el Accel
+	i2c_writeSingleRegister(&handlerAccelerometer, 0x1C, 0b00 << 4);
+
+	//Se selecciona el modo de ultra alta resolución para el Gyro
+	i2c_writeSingleRegister(&handlerAccelerometer, 0x1B, 0b00 << 4);
+
+	//Desactivamos el sensor de temperatura integrado en el MPU6050
+	i2c_writeSingleRegister(&handlerAccelerometer, 0x6B, 0b01 << 3);
+
+	//Se reinicia la configuración del accel
+	i2c_writeSingleRegister(&handlerAccelerometer, PWR_MGMT_1, 0x00);
+	rxData = '\0';
+
+	sprintf(bufferData, "\nPWR_MGMT_1 reset (w)\n");
+	writeMsgTX(&handlerUsart1, bufferData);
+
+	writeMsg(&handlerUsart1, "\nAccel calibrado correctamente \n");
+}
+
+/* Función para guardar en datos que se puedan manipular toda la información de calibración
+ * necesaria que se encuentra en los registros del dispositivo.
+ */
+
+void calibrationDataBar(void){
+
+	//AC1
+	uint8_t AC1_low = i2c_readSingleRegister(&handlerAccelerometer, 0xAB);
+	uint8_t AC1_high = i2c_readSingleRegister(&handlerAccelerometer, 0xAA);
+	AC1 = AC1_high << 8 | AC1_low;
+
+	//AC2
+	uint8_t AC2_low = i2c_readSingleRegister(&handlerAccelerometer, 0xAD);
+	uint8_t AC2_high = i2c_readSingleRegister(&handlerAccelerometer, 0xAC);
+	AC2 = AC2_high << 8 | AC2_low;
+
+	//AC3
+	uint8_t AC3_low = i2c_readSingleRegister(&handlerAccelerometer, 0xAF);
+	uint8_t AC3_high = i2c_readSingleRegister(&handlerAccelerometer, 0xAE);
+	AC3 = AC3_high << 8 | AC3_low;
+
+	//AC4
+	uint8_t AC4_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB1);
+	uint8_t AC4_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB0);
+	AC4 = AC4_high << 8 | AC4_low;
+
+	//AC5
+	uint8_t AC5_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB3);
+	uint8_t AC5_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB2);
+	AC5 = AC5_high << 8 | AC5_low;
+
+	//AC6
+	uint8_t AC6_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB5);
+	uint8_t AC6_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB4);
+	AC6 = AC6_high << 8 | AC6_low;
+
+	//B1
+	uint8_t B1_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB7);
+	uint8_t B1_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB6);
+	B1 = B1_high << 8 | B1_low;
+
+	//B2
+	uint8_t B2_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB9);
+	uint8_t B2_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB8);
+	B2 = B2_high << 8 | B2_low;
+
+	//MB
+	uint8_t MB_low = i2c_readSingleRegister(&handlerAccelerometer, 0xBB);
+	uint8_t MB_high = i2c_readSingleRegister(&handlerAccelerometer, 0xBA);
+	MB = MB_high << 8 | MB_low;
+
+	//MC
+	uint8_t MC_low = i2c_readSingleRegister(&handlerAccelerometer, 0xBD);
+	uint8_t MC_high = i2c_readSingleRegister(&handlerAccelerometer, 0xBC);
+	MC = MC_high << 8 | MC_low;
+
+	//MD
+	uint8_t MD_low = i2c_readSingleRegister(&handlerAccelerometer, 0xBF);
+	uint8_t MD_high = i2c_readSingleRegister(&handlerAccelerometer, 0xBE);
+	MD = MD_high << 8 | MD_low;
+}
+
+void calibrationDataAcc(void){
+
+	uint8_t AccelX_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_L);
+	uint8_t AccelX_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_H);
+	AccelX = AccelX_high << 8 | AccelX_low;
+
+	uint8_t AccelY_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_L);
+	uint8_t AccelY_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_H);
+	AccelY = AccelY_high << 8 | AccelY_low;
+
+	uint8_t AccelZ_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_L);
+	uint8_t AccelZ_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_H);
+	AccelZ = AccelZ_high << 8 | AccelZ_low;
+
+	uint8_t GyrX_low = i2c_readSingleRegister(&handlerAccelerometer, GYRO_XOUT_L);
+	uint8_t GyrX_high = i2c_readSingleRegister(&handlerAccelerometer, GYRO_XOUT_H);
+	GyrX = GyrX_high << 8 | GyrX_low;
+
+	uint8_t GyrY_low = i2c_readSingleRegister(&handlerAccelerometer, GYRO_YOUT_L);
+	uint8_t GyrY_high = i2c_readSingleRegister(&handlerAccelerometer, GYRO_YOUT_H);
+	GyrY = GyrY_high << 8 | GyrY_low;
+
+	uint8_t GyrZ_low = i2c_readSingleRegister(&handlerAccelerometer, GYRO_ZOUT_L);
+	uint8_t GyrZ_high = i2c_readSingleRegister(&handlerAccelerometer, GYRO_ZOUT_H);
+	GyrZ = GyrZ_high << 8 | GyrZ_low;
+}
+
+//Función que entrega la temperatura final ya calibrada
+long getTemp(void){
+
 	X1 = (UT-AC6)*AC5/(2^15);
 	X2 = MC*(2^11)/(X1 + MD);
 	B5 = X1 + X2;
 	T = (B5 + 8)/(2^4);
+	return T;
+}
 
-	//Guardamos el valor de la temperatura para posteriormente leerlo
-	Temp = T;
+//Función que entrega la pressión final ya calibrada
+long getPress(void){
 
-	//Calcular la presión real con los datos de calibración
 	B6 = B5 - 4000;
 	X1 = (B2 * (B6 * B6/(2^12))) / (2^11);
 	X2 = (AC2 * B6) / (2^11);
@@ -493,7 +586,7 @@ void BMP085(void){
 	X2 = (-7357 * p)/(2^16);
 	P = p + (X1 + X2 + 3791)/(2^4);
 
-	Press = P;
+	return P;
 }
 
 void usart1Rx_Callback(void){
