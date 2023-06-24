@@ -27,8 +27,10 @@
 
 //Definición de handlers GPIO
 GPIO_Handler_t handlerBlinky 				= {0};		//Handler Blinky
-GPIO_Handler_t handlerPinTX1				= {0};		//Handler Transmisión USART
-GPIO_Handler_t handlerPinRX1				= {0};		//Handler Recepción USART
+GPIO_Handler_t handlerPinTX1				= {0};		//Handler Transmisión USART1
+GPIO_Handler_t handlerPinRX1				= {0};		//Handler Recepción USART1
+GPIO_Handler_t handlerPinTX6				= {0};		//Handler Transmisión USART6
+GPIO_Handler_t handlerPinRX6				= {0};		//HAndler Recepción USART6
 GPIO_Handler_t handlerValvePin				= {0};		//Handler Válvula
 
 //Definición de handlers TIM
@@ -36,6 +38,7 @@ BasicTimer_Handler_t handlerTimerBlinky 	= {0};		//Handler Timer del blinky
 
 //Handlers comunicación serial USART
 USART_Handler_t handlerUsart1 				= {0};		//Handler USART1
+USART_Handler_t handlerUsart6				= {0};		//Handler USART6
 
 //Handlers I2C
 GPIO_Handler_t handlerI2cSDA				= {0};		//Handler SDA I2C acelerómetro
@@ -48,17 +51,17 @@ uint8_t rxData = 0;
 
 //Variables relacionadas con la comunicación I2C del Accel
 uint8_t i2cBuffer = 0;
-char bufferData[64] = "Module GY-88";
+char bufferData[64] = {0};
 
 //Variables relacionadas con el uso de los comandos en terminal
 bool stringComplete;
 uint16_t counterReception = 0;
 char cmd[256] = {0};
-char userMsg[256] = {0};
 char bufferReception[256] = {0};
 
 //Deifiniciones y variables del accel
-float converFact = ((2/32767.0)*(9.8))+(0.3);			//Factor de conversión para los datos del accel
+float converFactAcc = ((2/32767.0)*(9.8));			//Factor de conversión para los datos del accel
+float converFactGyr = ((2/32767.0)*(250));
 int16_t AccelX = 0;
 int16_t AccelY = 0;
 int16_t AccelZ = 0;
@@ -66,12 +69,9 @@ int16_t GyrX = 0;
 int16_t GyrY = 0;
 int16_t GyrZ = 0;
 
-long Press = 0;
-long Temp = 0;
+float Press = 0;
+float Temp = 0;
 float Altitude = 0;
-float p0 = 1013.25;
-float expo = 1/(5.255);
-float factor = 0;
 
 //Deficiniones para Barómetro
 //Definiciones de constantes de calibración
@@ -95,14 +95,13 @@ long X1 = 0;
 long X2 = 0;
 long X3 = 0;
 long B3 = 0;
-unsigned long B4 = 0;
 long B5 = 0;
 long B6 = 0;
-unsigned long B7 = 0;
 long T = 0;
 long P = 0;
-
 long p = 0;
+unsigned long B4 = 0;
+unsigned long B7 = 0;
 
 //Definiciones para comunicación I2C (ACCEL)
 #define ACCEL_ADDRESS 	0b1101001;		//ID Device
@@ -139,7 +138,7 @@ void parseCommands(char *ptrBufferReception);
 
 int main(void){
 
-	//Sintonización del HSI
+	//Calibración del HSI
 	RCC->CR &= ~RCC_CR_HSITRIM;
 	RCC->CR |= (13 << RCC_CR_HSITRIM_Pos);
 
@@ -158,11 +157,7 @@ int main(void){
 	 * sobre el manejo del dispositivo
 	 */
 
-	writeMsg(&handlerUsart1, "\n~Iniciando Sistema~\n");
-	writeMsg(&handlerUsart1, "\n startAcc  -->  Calibración del Accel-Gyro \n");
-	writeMsg(&handlerUsart1, "\n showData  -->  Presenta los datos actuales capturados por los sensores \n");
-	writeMsg(&handlerUsart1, "\n valve  -->  Alto o bajo para cerrar o abrir la valvula de combustible \n");
-
+	writeMsg(&handlerUsart1, "\nPress . \n");
 
 	/*Loop forever*/
 	while(1){
@@ -170,12 +165,12 @@ int main(void){
 		//Creamos una cadena de caracteres con los datos que llegan por el puerto serial
 		//El caracter '@' nos indica que es el final de la cadena
 
-		if (rxData != '\0'){
+		if ((rxData != '\0') && (rxData != '.')){
 			bufferReception[counterReception] = rxData;
 			counterReception++;
 
 			//Se define el siguiente caracter para indicar que el string está completo
-			if(rxData == '@'){
+			if(rxData == ','){
 
 				stringComplete = true;
 
@@ -187,7 +182,13 @@ int main(void){
 			//Para que no vuelva a entrar, Solo cambia debido a la interrupción
 			rxData = '\0';
 		}
-
+		if (rxData == '.'){
+			writeMsg(&handlerUsart1, "\n~Iniciando Sistema~\n");
+			writeMsg(&handlerUsart1, "\nacc  -->  Calibración del Accel-Gyro \n");
+			writeMsg(&handlerUsart1, "\ndata  -->  Presenta los datos actuales capturados por los sensores \n");
+			writeMsg(&handlerUsart1, "\nvalve  -->  Alto o bajo para cerrar o abrir la valvula de combustible \n");
+			rxData = '\0';
+		}
 		//Hacemos un análisis de la cadena de datos obtenida
 		if(stringComplete){
 
@@ -200,14 +201,14 @@ int main(void){
 
 void parseCommands(char *ptrBufferReception){
 
-	sscanf(ptrBufferReception, "%s %s", cmd, userMsg);
+	sscanf(ptrBufferReception, "%s", cmd);
 
-	if(strcmp(cmd, "startAcc") == 0){
+	if(strcmp(cmd, "acc") == 0){
 
 		//Inicialización del MPU6050
 		MPU6050();
 	}
-	else if(strcmp(cmd, "showData") == 0){
+	else if(strcmp(cmd, "data") == 0){
 
 		//Se cargan los datos de calibración correspondientes al Accel
 		calibrationDataAcc();
@@ -220,34 +221,36 @@ void parseCommands(char *ptrBufferReception){
 		/* Se calcula la altura (que posteriormente se mostrará) según el valor de
 		 * la presión atmosférica medida ppor el Bar
 		 */
-		//		factor = (1-((Press/(long)p0)^expo));
-				Altitude = 44330 * factor;
+
+		//Se debe buscar una fórmula para la altura que sí funcione
 
 		/* Presentación de los datos correspondientes a aceleración, ángulo de rotación,
 		 * presión atmosférica, temperatura y altura del dispositivo
 		 */
+
+		writeMsg(&handlerUsart1, "\n--------------------------------------------------------------------------------------------\n");
 		//Accel X
-		sprintf(bufferData, "\nLa aceleración en X es: %.2f m/s² \n", (float)AccelX*converFact);
+		sprintf(bufferData, "\nLa aceleración en X es: %.2f m/s² \n", ((float)AccelX*converFactAcc)-0.54);
 		writeMsg(&handlerUsart1, bufferData);
 
 		//Accel Y
-		sprintf(bufferData, "\nLa aceleración en Y es: %.2f m/s² \n", (float)AccelY*converFact);
+		sprintf(bufferData, "\nLa aceleración en Y es: %.2f m/s² \n", ((float)AccelY*converFactAcc)+0.15);
 		writeMsg(&handlerUsart1, bufferData);
 
 		//Accel Z
-		sprintf(bufferData, "\nLa aceleración en Z es: %.2f m/s² \n", (float)AccelZ*converFact);
+		sprintf(bufferData, "\nLa aceleración en Z es: %.2f m/s² \n", ((float)AccelZ*converFactAcc)+0.47);
 		writeMsg(&handlerUsart1, bufferData);
 
 		//Gyro X
-		sprintf(bufferData, "\nEl ángulo en X es: %.2f ° \n", (float)GyrX);
+		sprintf(bufferData, "\nEl ángulo en X es: %.2f ° \n", (float)GyrX*converFactGyr);
 		writeMsg(&handlerUsart1, bufferData);
 
 		//Gyro Y
-		sprintf(bufferData, "\nEl ángulo en Y es: %.2f ° \n", (float)GyrY);
+		sprintf(bufferData, "\nEl ángulo en Y es: %.2f ° \n", (float)GyrY*converFactGyr);
 		writeMsg(&handlerUsart1, bufferData);
 
 		//Gyro Z
-		sprintf(bufferData, "\nEl ángulo en Z es: %.2f °\n", (float)GyrZ);
+		sprintf(bufferData, "\nEl ángulo en Z es: %.2f °\n", (float)GyrZ*converFactGyr);
 		writeMsg(&handlerUsart1, bufferData);
 
 		//Presión
@@ -255,12 +258,14 @@ void parseCommands(char *ptrBufferReception){
 		writeMsg(&handlerUsart1, bufferData);
 
 		//Temperatura
-		sprintf(bufferData, "\nLa temperatura es: %.2f °C \n", (float)Temp);
+		sprintf(bufferData, "\nLa temperatura es: %.2f°C \n", (float)Temp);
 		writeMsg(&handlerUsart1, bufferData);
 
 		//Altura
 		sprintf(bufferData, "\nLa altura es: %.2f m \n", (float)Altitude);
 		writeMsg(&handlerUsart1, bufferData);
+
+		writeMsg(&handlerUsart1, "\n--------------------------------------------------------------------------------------------\n");
 		rxData = '\0';
 		}
 	else if(strcmp(cmd, "valve") == 0){
@@ -283,8 +288,8 @@ void parseCommands(char *ptrBufferReception){
 void initSystem(void){
 
 	//Configuración del Blinky
-	handlerBlinky.pGPIOx 									= GPIOH;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber 			= PIN_1;
+	handlerBlinky.pGPIOx 									= GPIOA;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber 			= PIN_5;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinMode 				= GPIO_MODE_OUT;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType 			= GPIO_OTYPE_PUSHPULL;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinSpeed 				= GPIO_OSPEEDR_FAST;
@@ -335,21 +340,36 @@ void initSystem(void){
 	i2c_Config(&handlerBarometer);
 
 	//Configuración de pines para USART1
-	//TX Pin
+	//TX Pin (USART1)
 	handlerPinTX1.pGPIOx									= GPIOA;
 	handlerPinTX1.GPIO_PinConfig.GPIO_PinNumber				= PIN_9;
 	handlerPinTX1.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
 	handlerPinTX1.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
 	GPIO_Config(&handlerPinTX1);
 
-	//RX Pin
+	//RX Pin (USART1)
 	handlerPinRX1.pGPIOx									= GPIOA;
 	handlerPinRX1.GPIO_PinConfig.GPIO_PinNumber				= PIN_10;
 	handlerPinRX1.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
 	handlerPinRX1.GPIO_PinConfig.GPIO_PinAltFunMode			= AF7;
 	GPIO_Config(&handlerPinRX1);
 
-	//Configuración de la comunicación serial
+	//Configuración de pines para USART6
+	//TX Pin (USART6)
+	handlerPinTX6.pGPIOx									= GPIOC;
+	handlerPinTX6.GPIO_PinConfig.GPIO_PinNumber				= PIN_6;
+	handlerPinTX6.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
+	handlerPinTX6.GPIO_PinConfig.GPIO_PinAltFunMode			= AF8;
+	GPIO_Config(&handlerPinTX6);
+
+	//RX Pin (USART6)
+	handlerPinRX6.pGPIOx									= GPIOC;
+	handlerPinRX6.GPIO_PinConfig.GPIO_PinNumber				= PIN_7;
+	handlerPinRX6.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
+	handlerPinRX6.GPIO_PinConfig.GPIO_PinAltFunMode			= AF8;
+	GPIO_Config(&handlerPinRX6);
+
+	//Configuración de la comunicación serial USART1
 	handlerUsart1.ptrUSARTx	 								= USART1;
 	handlerUsart1.USART_Config.USART_baudrate				= USART_BAUDRATE_9600;
 	handlerUsart1.USART_Config.USART_PLL_EN					= PLL_DISABLE;
@@ -360,6 +380,18 @@ void initSystem(void){
 	handlerUsart1.USART_Config.USART_enableIntTX			= USART_TX_INTERRUP_DISABLE;
 	handlerUsart1.USART_Config.USART_enableIntRX			= USART_RX_INTERRUP_ENABLE;
 	USART_Config(&handlerUsart1);
+
+	//Configuración de la comunicación serial USART6
+	handlerUsart6.ptrUSARTx	 								= USART6;
+	handlerUsart6.USART_Config.USART_baudrate				= USART_BAUDRATE_9600;
+	handlerUsart6.USART_Config.USART_PLL_EN					= PLL_DISABLE;
+	handlerUsart6.USART_Config.USART_datasize				= USART_DATASIZE_8BIT;
+	handlerUsart6.USART_Config.USART_parity					= USART_PARITY_NONE;
+	handlerUsart6.USART_Config.USART_stopbits				= USART_STOPBIT_1;
+	handlerUsart6.USART_Config.USART_mode					= USART_MODE_RXTX;
+	handlerUsart6.USART_Config.USART_enableIntTX			= USART_TX_INTERRUP_DISABLE;
+	handlerUsart6.USART_Config.USART_enableIntRX			= USART_RX_INTERRUP_ENABLE;
+	USART_Config(&handlerUsart6);
 
 	//Configuración Pin de salida
 	handlerValvePin.pGPIOx 									= GPIOA;
@@ -385,37 +417,45 @@ void BMP085(void){
 	i2c_writeSingleRegister(&handlerBarometer, 0xF4, 0x2E);
 
 	//Tiempo de espera para reescribir el registro
-	delay_ms(5);
+	delay_ms(30);
 
 	//Se guarda el valor en la variable de la temperatura
 	uint8_t Temp_low = i2c_readSingleRegister(&handlerBarometer, 0xF7);
 	uint8_t Temp_high = i2c_readSingleRegister(&handlerBarometer, 0xF6);
 	UT = (Temp_high << 8) + Temp_low;
+	delay_ms(10);
 
 	/* Leer el valor de la presión no compensado
 	 */
 	i2c_writeSingleRegister(&handlerBarometer, 0xF4, 0x34+(oss<<6));
 
 	//Tiempo de espera para reescribir el registro
-	delay_ms(5);
+	delay_ms(30);
 
 	//Se guarda el valor en la variable de la presión
 	uint8_t Press_low = i2c_readSingleRegister(&handlerBarometer, 0xF7);
 	uint8_t Press_high = i2c_readSingleRegister(&handlerBarometer, 0xF6);
 	uint8_t Press_Xlow = i2c_readSingleRegister(&handlerBarometer, 0xF8);
 	UP = ((Press_high<<16) + (Press_low<<8) + Press_Xlow) >> (8-oss);
+	delay_ms(10);
 
 	//Calcular la temperatura real con los datos de calibración
     getTemp();
 
 	//Guardamos el valor de la temperatura para posteriormente leerlo
-	Temp = getTemp();
+    /* El dispositivo entrega por defecto el valor en K, para hacer la conversión
+     * a °C solo se debe restar 297 al valor de la medida
+     */
+	Temp = (getTemp()-297);
 
 	//Calcular la presión real con los datos de calibración
 	getPress();
 
 	//Guardamos el valor de la presión para posteriormente leerlo
-	Press = getPress();
+	/* El dispositivo entrega por defecto el valor en Pa, para hacer la conversión
+	 * a hPa solo se debe dividir la medida entre 100
+	 */
+	Press = (getPress()/100);
 }
 
 void MPU6050(void){
@@ -468,59 +508,59 @@ void MPU6050(void){
 void calibrationDataBar(void){
 
 	//AC1
-	uint8_t AC1_low = i2c_readSingleRegister(&handlerAccelerometer, 0xAB);
-	uint8_t AC1_high = i2c_readSingleRegister(&handlerAccelerometer, 0xAA);
-	AC1 = AC1_high << 8 | AC1_low;
+	uint8_t AC1_high = i2c_readSingleRegister(&handlerBarometer, 0xAA);
+	uint8_t AC1_low = i2c_readSingleRegister(&handlerBarometer, 0xAB);
+	AC1 = (AC1_high << 8) + AC1_low;
 
 	//AC2
-	uint8_t AC2_low = i2c_readSingleRegister(&handlerAccelerometer, 0xAD);
-	uint8_t AC2_high = i2c_readSingleRegister(&handlerAccelerometer, 0xAC);
-	AC2 = AC2_high << 8 | AC2_low;
+	uint8_t AC2_high = i2c_readSingleRegister(&handlerBarometer, 0xAC);
+	uint8_t AC2_low = i2c_readSingleRegister(&handlerBarometer, 0xAD);
+	AC2 = (AC2_high << 8) + AC2_low;
 
 	//AC3
-	uint8_t AC3_low = i2c_readSingleRegister(&handlerAccelerometer, 0xAF);
-	uint8_t AC3_high = i2c_readSingleRegister(&handlerAccelerometer, 0xAE);
-	AC3 = AC3_high << 8 | AC3_low;
+	uint8_t AC3_high = i2c_readSingleRegister(&handlerBarometer, 0xAE);
+	uint8_t AC3_low = i2c_readSingleRegister(&handlerBarometer, 0xAF);
+	AC3 = (AC3_high << 8) + AC3_low;
 
 	//AC4
-	uint8_t AC4_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB1);
-	uint8_t AC4_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB0);
-	AC4 = AC4_high << 8 | AC4_low;
+	uint8_t AC4_high = i2c_readSingleRegister(&handlerBarometer, 0xB0);
+	uint8_t AC4_low = i2c_readSingleRegister(&handlerBarometer, 0xB1);
+	AC4 = (AC4_high << 8) + AC4_low;
 
 	//AC5
-	uint8_t AC5_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB3);
-	uint8_t AC5_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB2);
-	AC5 = AC5_high << 8 | AC5_low;
+	uint8_t AC5_high = i2c_readSingleRegister(&handlerBarometer, 0xB2);
+	uint8_t AC5_low = i2c_readSingleRegister(&handlerBarometer, 0xB3);
+	AC5 = (AC5_high << 8) + AC5_low;
 
 	//AC6
-	uint8_t AC6_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB5);
-	uint8_t AC6_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB4);
-	AC6 = AC6_high << 8 | AC6_low;
+	uint8_t AC6_high = i2c_readSingleRegister(&handlerBarometer, 0xB4);
+	uint8_t AC6_low = i2c_readSingleRegister(&handlerBarometer, 0xB5);
+	AC6 = (AC6_high << 8) + AC6_low;
 
 	//B1
-	uint8_t B1_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB7);
-	uint8_t B1_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB6);
-	B1 = B1_high << 8 | B1_low;
+	uint8_t B1_low = i2c_readSingleRegister(&handlerBarometer, 0xB7);
+	uint8_t B1_high = i2c_readSingleRegister(&handlerBarometer, 0xB6);
+	B1 = (B1_high << 8) + B1_low;
 
 	//B2
-	uint8_t B2_low = i2c_readSingleRegister(&handlerAccelerometer, 0xB9);
-	uint8_t B2_high = i2c_readSingleRegister(&handlerAccelerometer, 0xB8);
-	B2 = B2_high << 8 | B2_low;
+	uint8_t B2_high = i2c_readSingleRegister(&handlerBarometer, 0xB8);
+	uint8_t B2_low = i2c_readSingleRegister(&handlerBarometer, 0xB9);
+	B2 = (B2_high << 8) + B2_low;
 
 	//MB
-	uint8_t MB_low = i2c_readSingleRegister(&handlerAccelerometer, 0xBB);
-	uint8_t MB_high = i2c_readSingleRegister(&handlerAccelerometer, 0xBA);
-	MB = MB_high << 8 | MB_low;
+	uint8_t MB_high = i2c_readSingleRegister(&handlerBarometer, 0xBA);
+	uint8_t MB_low = i2c_readSingleRegister(&handlerBarometer, 0xBB);
+	MB = (MB_high << 8) + MB_low;
 
 	//MC
-	uint8_t MC_low = i2c_readSingleRegister(&handlerAccelerometer, 0xBD);
-	uint8_t MC_high = i2c_readSingleRegister(&handlerAccelerometer, 0xBC);
-	MC = MC_high << 8 | MC_low;
+	uint8_t MC_high = i2c_readSingleRegister(&handlerBarometer, 0xBC);
+	uint8_t MC_low = i2c_readSingleRegister(&handlerBarometer, 0xBD);
+	MC = (MC_high << 8) + MC_low;
 
 	//MD
-	uint8_t MD_low = i2c_readSingleRegister(&handlerAccelerometer, 0xBF);
-	uint8_t MD_high = i2c_readSingleRegister(&handlerAccelerometer, 0xBE);
-	MD = MD_high << 8 | MD_low;
+	uint8_t MD_high = i2c_readSingleRegister(&handlerBarometer, 0xBE);
+	uint8_t MD_low = i2c_readSingleRegister(&handlerBarometer, 0xBF);
+	MD = (MD_high << 8) + MD_low;
 }
 
 void calibrationDataAcc(void){
@@ -553,38 +593,39 @@ void calibrationDataAcc(void){
 //Función que entrega la temperatura final ya calibrada
 long getTemp(void){
 
-	X1 = (UT-AC6)*AC5/(2^15);
-	X2 = MC*(2^11)/(X1 + MD);
+	X1 = ((UT-AC6)*AC5)/(32768);
+	X2 = (MC*(2048))/(X1 + MD);
 	B5 = X1 + X2;
-	T = (B5 + 8)/(2^4);
+	T = (B5 + 8)/(16);
 	return T;
 }
+
 
 //Función que entrega la pressión final ya calibrada
 long getPress(void){
 
 	B6 = B5 - 4000;
-	X1 = (B2 * (B6 * B6/(2^12))) / (2^11);
-	X2 = (AC2 * B6) / (2^11);
+	X1 = (B2 * (B6 * B6/(4096))) / (2048);
+	X2 = (AC2 * B6) / (2048);
 	X3 = X1 + X2;
-	B3 = (((AC1*4+X3) << oss) + 2)/4;
-	X1 = (AC3 * B6) / (2^13);
-	X2 = (B1 * (B6 * B6 / (2^12)))/(2^16);
+	B3 = (((AC1*4)+(X3 << oss)) + 2)/4;
+	X1 = (AC3 * B6) / (8192);
+	X2 = (B1 * (B6 * B6 / (4096)))/(65536);
 	X3 = ((X1+X2)+2) / (4) ;
-	B4 = AC4 * (unsigned long)(X3 + 32768) / (2^15);
+	B4 = (AC4 * (unsigned long)(X3 + 32768)) / (32768);
 	B7 = ((unsigned long)UP - B3) * (50000 >> oss);
 
 	if(B7 < 0x80000000){
-		p = (B7/2) * B4;
+		p = (B7*2) / B4;
 	}
 	else{
 		p = (B7/B4) * 2;
 	}
 
-	X1 = (p/(2^8)) * (p/(2^8));
-	X1 = (X1 * 3038)/(2^16);
-	X2 = (-7357 * p)/(2^16);
-	P = p + (X1 + X2 + 3791)/(2^4);
+	X1 = (p >> 8) * (p >> 8);
+	X1 = (X1 * 3038) >> 16;
+	X2 = (-7357 * p) >> 16;
+	P = p + (X1 + X2 + 3791)/(16);
 
 	return P;
 }
