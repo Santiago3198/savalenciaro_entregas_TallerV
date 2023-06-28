@@ -35,6 +35,7 @@ GPIO_Handler_t handlerValvePin				= {0};		//Handler Válvula
 
 //Definición de handlers TIM
 BasicTimer_Handler_t handlerTimerBlinky 	= {0};		//Handler Timer del blinky
+BasicTimer_Handler_t handlerTimerData		= {0};		//Handler Timer de la muestra de datos
 
 //Handlers comunicación serial USART
 USART_Handler_t handlerUsart1 				= {0};		//Handler USART1
@@ -48,6 +49,11 @@ I2C_Handler_t handlerBarometer				= {0};		//Handler de la configuración I2C bar
 
 //Definición de variables
 uint8_t rxData = 0;
+uint8_t flagData = 0;
+uint8_t dataOn = 0;
+
+//Definiciónes para el módulo GPS
+uint8_t rxData6 = 0;
 
 //Variables relacionadas con la comunicación I2C del Accel
 uint8_t i2cBuffer = 0;
@@ -185,15 +191,61 @@ int main(void){
 		if (rxData == '.'){
 			writeMsg(&handlerUsart1, "\n~Iniciando Sistema~\n");
 			writeMsg(&handlerUsart1, "\nacc  -->  Calibración del Accel-Gyro \n");
-			writeMsg(&handlerUsart1, "\ndata  -->  Presenta los datos actuales capturados por los sensores \n");
+			writeMsg(&handlerUsart1, "\nshow  -->  Presenta los datos actuales capturados por los sensores \n");
+			writeMsg(&handlerUsart1, "\ndata  -->  Muestra de manera periodica los datos tomados por los sesores \n");
+			writeMsg(&handlerUsart1, "\nstop  -->  Detiene la muestra de datos \n");
 			writeMsg(&handlerUsart1, "\nvalve  -->  Alto o bajo para cerrar o abrir la valvula de combustible \n");
 			rxData = '\0';
 		}
+
 		//Hacemos un análisis de la cadena de datos obtenida
 		if(stringComplete){
 
 			parseCommands(bufferReception);
 			stringComplete = false;
+		}
+
+		if(dataOn == 1){
+
+			if(flagData == 1){
+
+				//Accel X
+				sprintf(bufferData, "\nAceleración X: %.2f m/s²", ((float)AccelX*converFactAcc)-0.54);
+				writeMsg(&handlerUsart1, bufferData);
+
+				//Accel Y
+				sprintf(bufferData, "\nAceleración Y: %.2f m/s²", ((float)AccelY*converFactAcc)+0.15);
+				writeMsg(&handlerUsart1, bufferData);
+
+				//Accel Z
+				sprintf(bufferData, "\nAceleración Z: %.2f m/s²", ((float)AccelZ*converFactAcc)+0.47);
+				writeMsg(&handlerUsart1, bufferData);
+
+				//Gyro X
+				sprintf(bufferData, "\nÁngulo X: %.2f °", (float)GyrX*converFactGyr);
+				writeMsg(&handlerUsart1, bufferData);
+
+				//Gyro Y
+				sprintf(bufferData, "\nÁngulo Y: %.2f °", (float)GyrY*converFactGyr);
+				writeMsg(&handlerUsart1, bufferData);
+
+				//Gyro Z
+				sprintf(bufferData, "\nÁngulo Z: %.2f °", (float)GyrZ*converFactGyr);
+				writeMsg(&handlerUsart1, bufferData);
+
+				//Presión
+				sprintf(bufferData, "\nPresión: %.2f hPa", (float)Press);
+				writeMsg(&handlerUsart1, bufferData);
+
+				//Temperatura
+				sprintf(bufferData, "\nTemperatura: %.2f°C", (float)Temp);
+				writeMsg(&handlerUsart1, bufferData);
+
+				writeMsg(&handlerUsart1, "\n--------------------------------------------------------------------------------------------");
+				rxData = '\0';
+
+				flagData = 0;
+			}
 		}
 	}
 	return 0;
@@ -208,7 +260,7 @@ void parseCommands(char *ptrBufferReception){
 		//Inicialización del MPU6050
 		MPU6050();
 	}
-	else if(strcmp(cmd, "data") == 0){
+	else if(strcmp(cmd, "show") == 0){
 
 		//Se cargan los datos de calibración correspondientes al Accel
 		calibrationDataAcc();
@@ -228,7 +280,6 @@ void parseCommands(char *ptrBufferReception){
 		 * presión atmosférica, temperatura y altura del dispositivo
 		 */
 
-		writeMsg(&handlerUsart1, "\n--------------------------------------------------------------------------------------------\n");
 		//Accel X
 		sprintf(bufferData, "\nLa aceleración en X es: %.2f m/s² \n", ((float)AccelX*converFactAcc)-0.54);
 		writeMsg(&handlerUsart1, bufferData);
@@ -261,13 +312,16 @@ void parseCommands(char *ptrBufferReception){
 		sprintf(bufferData, "\nLa temperatura es: %.2f°C \n", (float)Temp);
 		writeMsg(&handlerUsart1, bufferData);
 
-		//Altura
-		sprintf(bufferData, "\nLa altura es: %.2f m \n", (float)Altitude);
-		writeMsg(&handlerUsart1, bufferData);
-
 		writeMsg(&handlerUsart1, "\n--------------------------------------------------------------------------------------------\n");
 		rxData = '\0';
-		}
+	}
+	else if(strcmp(cmd, "data") == 0){
+
+		dataOn = 1;
+	}
+	else if(strcmp(cmd, "stop") == 0){
+		dataOn = 0;
+	}
 	else if(strcmp(cmd, "valve") == 0){
 
 		//Se cambia el estado el estado del pin
@@ -288,8 +342,8 @@ void parseCommands(char *ptrBufferReception){
 void initSystem(void){
 
 	//Configuración del Blinky
-	handlerBlinky.pGPIOx 									= GPIOA;
-	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber 			= PIN_5;
+	handlerBlinky.pGPIOx 									= GPIOC;
+	handlerBlinky.GPIO_PinConfig.GPIO_PinNumber 			= PIN_0;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinMode 				= GPIO_MODE_OUT;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinOPType 			= GPIO_OTYPE_PUSHPULL;
 	handlerBlinky.GPIO_PinConfig.GPIO_PinSpeed 				= GPIO_OSPEEDR_FAST;
@@ -303,6 +357,14 @@ void initSystem(void){
 	handlerTimerBlinky.TIMx_Config.TIMx_period 				= 2500;
 	handlerTimerBlinky.TIMx_Config.TIMx_interruptEnable 	= 1;
 	BasicTimer_Config(&handlerTimerBlinky);
+
+	//Configuración del TIM5 (Data)
+	handlerTimerData.ptrTIMx 								= TIM5;
+	handlerTimerData.TIMx_Config.TIMx_mode 					= BTIMER_MODE_UP;
+	handlerTimerData.TIMx_Config.TIMx_speed 				= BTIMER_SPEED_100us;
+	handlerTimerData.TIMx_Config.TIMx_period 				= 30000;
+	handlerTimerData.TIMx_Config.TIMx_interruptEnable 		= 1;
+	BasicTimer_Config(&handlerTimerData);
 
 	//Configuración comunicación I2C (ACCEL)
 	//SDA
@@ -355,13 +417,6 @@ void initSystem(void){
 	GPIO_Config(&handlerPinRX1);
 
 	//Configuración de pines para USART6
-	//TX Pin (USART6)
-	handlerPinTX6.pGPIOx									= GPIOC;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinNumber				= PIN_6;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinMode				= GPIO_MODE_ALTFN;
-	handlerPinTX6.GPIO_PinConfig.GPIO_PinAltFunMode			= AF8;
-	GPIO_Config(&handlerPinTX6);
-
 	//RX Pin (USART6)
 	handlerPinRX6.pGPIOx									= GPIOC;
 	handlerPinRX6.GPIO_PinConfig.GPIO_PinNumber				= PIN_7;
@@ -638,3 +693,10 @@ void usart1Rx_Callback(void){
 void BasicTimer2_Callback(void){
 	GPIOxTooglePin(&handlerBlinky);
 }
+
+void BasicTimer5_Callback(void){
+
+	//Bandera que se levanta cada medio segundo para mostrar los datos en consola
+	flagData = 1;
+}
+
